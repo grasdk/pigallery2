@@ -76,6 +76,10 @@
           "pt-br": {
             "baseHref": "",
             "translation": "src/frontend/translate/messages.pt-br.xlf"
+          },
+          "da": {
+            "baseHref": "",
+            "translation": "src/frontend/translate/messages.da.xlf"
           }
         }
       },
