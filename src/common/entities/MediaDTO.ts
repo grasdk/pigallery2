@@ -19,11 +19,26 @@ export interface MediaMetadata {
   fileSize: number;
   keywords?: string[];
   rating?: RatingTypes;
+  title?: string;
+  caption?: string;
 }
 
 export interface MediaDimension {
   width: number;
   height: number;
+}
+
+export interface SideCar {
+  dc?: SideCarDc;
+  xmp?: SideCarXmp;
+}
+
+export interface SideCarDc {
+  subject?: string[];
+}
+
+export interface SideCarXmp {
+  Rating?: RatingTypes;
 }
 
 export const MediaDTOUtils = {

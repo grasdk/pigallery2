@@ -86,6 +86,9 @@ export class MediaMetadataEntity implements MediaMetadata {
   @Column('text')
   caption: string;
 
+  @Column('text')
+  title?: string;
+
   @Column(() => MediaDimensionEntity)
   size: MediaDimensionEntity;
 

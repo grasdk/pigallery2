@@ -1,5 +1,6 @@
 import {VideoMetadata} from '../../../common/entities/VideoDTO';
 import {FaceRegion, PhotoMetadata} from '../../../common/entities/PhotoDTO';
+import {SideCar} from '../../../common/entities/MediaDTO';
 import {Config} from '../../../common/config/private/Config';
 import {Logger} from '../../Logger';
 import * as fs from 'fs';
@@ -36,28 +37,6 @@ export class MetadataLoader {
       fileSize: 0,
       fps: 0,
     };
-
-    try {
-      // search for sidecar and merge metadata
-      const fullPathWithoutExt = path.parse(fullPath).name;
-      const sidecarPaths = [
-        fullPath + '.xmp',
-        fullPath + '.XMP',
-        fullPathWithoutExt + '.xmp',
-        fullPathWithoutExt + '.XMP',
-      ];
-
-      for (const sidecarPath of sidecarPaths) {
-        if (fs.existsSync(sidecarPath)) {
-          const sidecarData = await exifr.sidecar(sidecarPath);
-          metadata.keywords = [(sidecarData as any).dc.subject].flat();
-          metadata.rating = (sidecarData as any).xmp.Rating;
-        }
-      }
-    } catch (err) {
-      Logger.silly(LOG_TAG, 'Error loading sidecar metadata for : ' + fullPath);
-      Logger.silly(err);
-    }
 
     try {
       const stat = fs.statSync(fullPath);
@@ -147,6 +126,41 @@ export class MetadataLoader {
         Logger.silly(err);
       }
       metadata.creationDate = metadata.creationDate || 0;
+
+      try {
+        // search for sidecar and merge metadata
+        const fullPathWithoutExt = path.parse(fullPath).name;
+        const sidecarPaths = [
+          fullPath + '.xmp',
+          fullPath + '.XMP',
+          fullPathWithoutExt + '.xmp',
+          fullPathWithoutExt + '.XMP',
+        ];
+  
+        for (const sidecarPath of sidecarPaths) {
+          if (fs.existsSync(sidecarPath)) {
+            const sidecarData = await exifr.sidecar(sidecarPath);
+            if (sidecarData !== undefined) {
+              if ((sidecarData as SideCar).dc.subject !== undefined) {
+                if (metadata.keywords === undefined) {
+                  metadata.keywords = [];
+                }
+                for (const kw of (sidecarData as SideCar).dc.subject) {
+                  if (metadata.keywords.indexOf(kw) === -1) {
+                    metadata.keywords.push(kw);
+                  }
+                }              }
+              if ((sidecarData as SideCar).xmp.Rating !== undefined) {
+                metadata.rating = (sidecarData as SideCar).xmp.Rating;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        Logger.silly(LOG_TAG, 'Error loading sidecar metadata for : ' + fullPath);
+        Logger.silly(err);
+      }
+
     } catch (err) {
       Logger.silly(LOG_TAG, 'Error loading metadata for : ' + fullPath);
       Logger.silly(err);
@@ -186,27 +200,6 @@ export class MetadataLoader {
           const stat = fs.statSync(fullPath);
           metadata.fileSize = stat.size;
           metadata.creationDate = stat.mtime.getTime();
-        } catch (err) {
-          // ignoring errors
-        }
-
-        try {
-          // search for sidecar and merge metadata
-          const fullPathWithoutExt = path.parse(fullPath).name;
-          const sidecarPaths = [
-            fullPath + '.xmp',
-            fullPath + '.XMP',
-            fullPathWithoutExt + '.xmp',
-            fullPathWithoutExt + '.XMP',
-          ];
-
-          for (const sidecarPath of sidecarPaths) {
-            if (fs.existsSync(sidecarPath)) {
-              const sidecarData = await exifr.sidecar(sidecarPath);
-              metadata.keywords = [(sidecarData as any).dc.subject].flat();
-              metadata.rating = (sidecarData as any).xmp.Rating;
-            }
-          }
         } catch (err) {
           // ignoring errors
         }
@@ -313,7 +306,7 @@ export class MetadataLoader {
           }
         } catch (err) {
           Logger.debug(LOG_TAG, 'Error parsing exif', fullPath, err);
-          try {
+        try {
             const info = imageSize(fullPath);
             metadata.size = {width: info.width, height: info.height};
           } catch (e) {
@@ -341,6 +334,9 @@ export class MetadataLoader {
             metadata.positionData.city = iptcData.city
               .replace(/\0/g, '')
               .trim();
+          }
+          if (iptcData.object_name) {
+            metadata.title = iptcData.object_name.replace(/\0/g, '').trim();
           }
           if (iptcData.caption) {
             metadata.caption = iptcData.caption.replace(/\0/g, '').trim();
@@ -506,6 +502,42 @@ export class MetadataLoader {
           }
         } catch (err) {
           // ignoring errors
+        }
+
+        try {
+          // search for sidecar and merge metadata
+          const fullPathWithoutExt = path.parse(fullPath).name;
+          const sidecarPaths = [
+            fullPath + '.xmp',
+            fullPath + '.XMP',
+            fullPathWithoutExt + '.xmp',
+            fullPathWithoutExt + '.XMP',
+          ];
+
+          for (const sidecarPath of sidecarPaths) {
+            if (fs.existsSync(sidecarPath)) {
+              const sidecarData = await exifr.sidecar(sidecarPath);
+
+              if (sidecarData !== undefined) {
+                if ((sidecarData as SideCar).dc.subject !== undefined) {
+                  if (metadata.keywords === undefined) {
+                    metadata.keywords = [];
+                  }
+                  for (const kw of (sidecarData as SideCar).dc.subject) {
+                    if (metadata.keywords.indexOf(kw) === -1) {
+                      metadata.keywords.push(kw);
+                    }
+                  }
+                }
+                if ((sidecarData as SideCar).xmp.Rating !== undefined) {
+                  metadata.rating = (sidecarData as SideCar).xmp.Rating;
+                }
+              }
+            }
+          }
+        } catch (err) {
+          Logger.silly(LOG_TAG, 'Error loading sidecar metadata for : ' + fullPath);
+          Logger.silly(err);
         }
 
       } catch (err) {
