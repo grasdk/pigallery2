@@ -1,3 +1,4 @@
+.angular/
 .idea/
 PiGallery2.iml
 node_modules/
@@ -30,3 +31,6 @@ test.*
 /test/cypress/screenshots/
 /extensions/
 /extension/lib/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
