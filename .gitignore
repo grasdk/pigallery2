@@ -34,3 +34,11 @@ test.*
 *.sublime-project
 *.sublime-workspace
 .DS_Store
+test/folder-reset.js
+test/folder-reset.js.map
+test/TestHelper.js
+test/TestHelper.js.map
+test/frontend/translation.spec.js
+test/frontend/translation.spec.js.map
+/coverage/
+.nyc_output/
