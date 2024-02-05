@@ -1,23 +1,22 @@
-import {VideoMetadata} from '../../../common/entities/VideoDTO';
-import {FaceRegion, PhotoMetadata} from '../../../common/entities/PhotoDTO';
-import {SideCar} from '../../../common/entities/MediaDTO';
-import {Config} from '../../../common/config/private/Config';
-import {Logger} from '../../Logger';
 import * as fs from 'fs';
-import {imageSize} from 'image-size';
+import { imageSize } from 'image-size';
+import { Config } from '../../../common/config/private/Config';
+import { SideCar } from '../../../common/entities/MediaDTO';
+import { FaceRegion, PhotoMetadata } from '../../../common/entities/PhotoDTO';
+import { VideoMetadata } from '../../../common/entities/VideoDTO';
+import { Logger } from '../../Logger';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import * as ExifReader from 'exifreader';
-import {ExifParserFactory, OrientationTypes} from 'ts-exif-parser';
-import {IptcParser} from 'ts-node-iptc';
-import {FFmpegFactory} from '../FFmpegFactory';
-import {FfprobeData} from 'fluent-ffmpeg';
-import {Utils} from '../../../common/Utils';
-import {ExtensionDecorator} from '../extension/ExtensionDecorator';
 import * as exifr from 'exifr';
-import * as path from 'path';
+import { FfprobeData } from 'fluent-ffmpeg';
+import { FileHandle } from 'fs/promises';
 import * as util from 'node:util';
-import {FileHandle} from 'fs/promises';
+import * as path from 'path';
+import { ExifParserFactory, OrientationTypes } from 'ts-exif-parser';
+import { IptcParser } from 'ts-node-iptc';
+import { Utils } from '../../../common/Utils';
+import { FFmpegFactory } from '../FFmpegFactory';
+import { ExtensionDecorator } from '../extension/ExtensionDecorator';
 
 const LOG_TAG = '[MetadataLoader]';
 const ffmpeg = FFmpegFactory.get();
@@ -358,33 +357,44 @@ export class MetadataLoader {
         }
 
         try {
-          // TODO: clean up the three different exif readers,
-          //  and keep the minimum amount only
-          const exif: ExifReader.Tags & ExifReader.XmpTags & ExifReader.IccTags = ExifReader.load(data);
-          if (exif.Rating) {
-            metadata.rating = parseInt(exif.Rating.value as string, 10) as 0 | 1 | 2 | 3 | 4 | 5;
+          const exifrOptions = {
+            tiff: true,
+            xmp: true,
+            icc: false,
+            jfif: false, //not needed and not supported for png
+            ihdr: true,
+            iptc: false, //exifr reads UTF8-encoded data wrongly
+            exif: true,
+            gps: true,
+            translateValues: false, //don't translate orientation from numbers to strings etc.
+            mergeOutput: false //don't merge output, because things like Microsoft Rating (percent) and xmp.rating will be merged
+        };
+        
+        const exif = await exifr.parse(data, exifrOptions);
+          if (exif.xmp && exif.xmp.Rating) {
+            metadata.rating = exif.xmp.Rating;
             if (metadata.rating < 0) {
               metadata.rating = 0;
             }
           }
-          if (
-            exif.subject &&
-            exif.subject.value &&
-            exif.subject.value.length > 0
-          ) {
+          if (exif.dc &&
+              exif.dc.subject &&
+              exif.dc.subject.length > 0) {
+            const subj = Array.isArray(exif.dc.subject) ? exif.dc.subject : [exif.dc.subject];
             if (metadata.keywords === undefined) {
-              metadata.keywords = [];
+                metadata.keywords = [];
             }
-            for (const kw of exif.subject.value as ExifReader.XmpTag[]) {
-              if (metadata.keywords.indexOf(kw.description) === -1) {
-                metadata.keywords.push(kw.description);
-              }
+            for (const kw of subj) {
+                if (metadata.keywords.indexOf(kw) === -1) {
+                    metadata.keywords.push(kw);
+                }
             }
-          }
+        }
           let orientation = OrientationTypes.TOP_LEFT;
-          if (exif.Orientation) {
+          if (exif.ifd0 &&
+            exif.ifd0.Orientation) {
             orientation = parseInt(
-              exif.Orientation.value as any,
+              exif.ifd0.Orientation as any,
               10
             ) as number;
           }
@@ -396,9 +406,11 @@ export class MetadataLoader {
             metadata.size.height = height;
           }
 
-          if (Config.Faces.enabled) {
+          if (Config.Faces.enabled &&
+            exif["mwg-rs"] &&
+            exif["mwg-rs"].Regions) {
             const faces: FaceRegion[] = [];
-            const regionListVal = ((exif.Regions?.value as any)?.RegionList)?.value;
+            const regionListVal = Array.isArray(exif["mwg-rs"].Regions.RegionList) ? exif["mwg-rs"].Regions.RegionList : [exif["mwg-rs"].Regions.RegionList];
             if (regionListVal) {
               for (const regionRoot of regionListVal) {
                 let type;
@@ -442,16 +454,16 @@ export class MetadataLoader {
 
                 /* Adobe Lightroom based face region structure */
                 if (
-                  regionRoot.value &&
-                  regionRoot.value['rdf:Description'] &&
-                  regionRoot.value['rdf:Description'].value &&
-                  regionRoot.value['rdf:Description'].value['mwg-rs:Area']
+                  regionRoot &&
+                  regionRoot['rdf:Description'] &&
+                  regionRoot['rdf:Description'] &&
+                  regionRoot['rdf:Description']['mwg-rs:Area']
                 ) {
-                  const region = regionRoot.value['rdf:Description'];
-                  const regionBox = region.value['mwg-rs:Area'].attributes;
+                  const region = regionRoot['rdf:Description'];
+                  const regionBox = region['mwg-rs:Area'].attributes;
 
-                  name = region.attributes['mwg-rs:Name'];
-                  type = region.attributes['mwg-rs:Type'];
+                  name = region['mwg-rs:Name'];
+                  type = region['mwg-rs:Type'];
                   box = createFaceBox(
                     regionBox['stArea:w'],
                     regionBox['stArea:h'],
@@ -460,18 +472,19 @@ export class MetadataLoader {
                   );
                   /* Load exiftool edited face region structure, see github issue #191 */
                 } else if (
-                  regionRoot.Area &&
+                  regionRoot &&
                   regionRoot.Name &&
-                  regionRoot.Type
+                  regionRoot.Type &&
+                  regionRoot.Area
                 ) {
-                  const regionBox = regionRoot.Area.value;
-                  name = regionRoot.Name.value;
-                  type = regionRoot.Type.value;
+                  const regionBox = regionRoot.Area;
+                  name = regionRoot.Name;
+                  type = regionRoot.Type;
                   box = createFaceBox(
-                    regionBox.w.value,
-                    regionBox.h.value,
-                    regionBox.x.value,
-                    regionBox.y.value
+                    regionBox.w,
+                    regionBox.h,
+                    regionBox.x,
+                    regionBox.y
                   );
                 }
 

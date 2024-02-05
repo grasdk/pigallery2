@@ -31,8 +31,7 @@ describe('MetadataLoader', () => {
 
   it('should load jpg', async () => {
     const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/test image öüóőúéáű-.,.jpg'));
-//    const expected = require(path.join(__dirname, '/../../../assets/test image öüóőúéáű-.,.json'));
-    const expected = require(path.join(__dirname, '/../../../assets/old_photo.json'));
+    const expected = require(path.join(__dirname, '/../../../assets/test image öüóőúéáű-.,.json'));
     expect(Utils.clone(data)).to.be.deep.equal(expected);
   });
 
@@ -63,6 +62,11 @@ describe('MetadataLoader', () => {
   it('should load jpg with special characters', async () => {
     const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/Chars.jpg'));
     const expected = require(path.join(__dirname, '/../../../assets/Chars.json'));
+    expect(Utils.clone(data)).to.be.deep.equal(expected);
+  });
+  it('should load png with keyword and dates', async () => {
+    const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/png_with_keyword_and_dates.png'));
+    const expected = require(path.join(__dirname, '/../../../assets/png_with_keyword_and_dates.json'));
     expect(Utils.clone(data)).to.be.deep.equal(expected);
   });
 
