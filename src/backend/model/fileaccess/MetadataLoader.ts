@@ -181,6 +181,19 @@ export class MetadataLoader {
       creationDate: 0,
       fileSize: 0,
     };
+    const exifrOptions = {
+      tiff: true,
+      xmp: true,
+      icc: false,
+      jfif: false, //not needed and not supported for png
+      ihdr: true,
+      iptc: false, //exifr reads UTF8-encoded data wrongly
+      exif: true,
+      gps: true,
+      translateValues: false, //don't translate orientation from numbers to strings etc.
+      mergeOutput: false //don't merge output, because things like Microsoft Rating (percent) and xmp.rating will be merged
+  };
+
     try {
       const data = Buffer.allocUnsafe(Config.Media.photoMetadataSize);
       fileHandle = await fs.promises.open(fullPath, 'r');
@@ -203,117 +216,7 @@ export class MetadataLoader {
           // ignoring errors
         }
 
-        try {
-          const exif = ExifParserFactory.create(data).parse();
-          if (
-            exif.tags.ISO ||
-            exif.tags.Model ||
-            exif.tags.Make ||
-            exif.tags.FNumber ||
-            exif.tags.ExposureTime ||
-            exif.tags.FocalLength ||
-            exif.tags.LensModel
-          ) {
-            if (exif.tags.Model && exif.tags.Model !== '') {
-              metadata.cameraData = metadata.cameraData || {};
-              metadata.cameraData.model = '' + exif.tags.Model;
-            }
-            if (exif.tags.Make && exif.tags.Make !== '') {
-              metadata.cameraData = metadata.cameraData || {};
-              metadata.cameraData.make = '' + exif.tags.Make;
-            }
-            if (exif.tags.LensModel && exif.tags.LensModel !== '') {
-              metadata.cameraData = metadata.cameraData || {};
-              metadata.cameraData.lens = '' + exif.tags.LensModel;
-            }
-            if (Utils.isUInt32(exif.tags.ISO)) {
-              metadata.cameraData = metadata.cameraData || {};
-              metadata.cameraData.ISO = parseInt('' + exif.tags.ISO, 10);
-            }
-            if (Utils.isFloat32(exif.tags.FocalLength)) {
-              metadata.cameraData = metadata.cameraData || {};
-              metadata.cameraData.focalLength = parseFloat(
-                '' + exif.tags.FocalLength
-              );
-            }
-            if (Utils.isFloat32(exif.tags.ExposureTime)) {
-              metadata.cameraData = metadata.cameraData || {};
-              metadata.cameraData.exposure = parseFloat(
-                parseFloat('' + exif.tags.ExposureTime).toFixed(6)
-              );
-            }
-            if (Utils.isFloat32(exif.tags.FNumber)) {
-              metadata.cameraData = metadata.cameraData || {};
-              metadata.cameraData.fStop = parseFloat(
-                parseFloat('' + exif.tags.FNumber).toFixed(2)
-              );
-            }
-          }
-          if (
-            !isNaN(exif.tags.GPSLatitude) ||
-            exif.tags.GPSLongitude ||
-            exif.tags.GPSAltitude
-          ) {
-            metadata.positionData = metadata.positionData || {};
-            metadata.positionData.GPSData = {};
-
-            if (Utils.isFloat32(exif.tags.GPSLongitude)) {
-              metadata.positionData.GPSData.longitude = parseFloat(
-                exif.tags.GPSLongitude.toFixed(6)
-              );
-            }
-            if (Utils.isFloat32(exif.tags.GPSLatitude)) {
-              metadata.positionData.GPSData.latitude = parseFloat(
-                exif.tags.GPSLatitude.toFixed(6)
-              );
-            }
-          }
-          if (
-            exif.tags.CreateDate ||
-            exif.tags.DateTimeOriginal ||
-            exif.tags.ModifyDate
-          ) {
-            metadata.creationDate =
-              (exif.tags.DateTimeOriginal ||
-                exif.tags.CreateDate ||
-                exif.tags.ModifyDate) * 1000;
-          }
-          if (exif.imageSize) {
-            metadata.size = {
-              width: exif.imageSize.width,
-              height: exif.imageSize.height,
-            };
-          } else if (
-            exif.tags.RelatedImageWidth &&
-            exif.tags.RelatedImageHeight
-          ) {
-            metadata.size = {
-              width: exif.tags.RelatedImageWidth,
-              height: exif.tags.RelatedImageHeight,
-            };
-          } else if (
-            exif.tags.ImageWidth &&
-            exif.tags.ImageHeight
-          ) {
-            metadata.size = {
-              width: exif.tags.ImageWidth,
-              height: exif.tags.ImageHeight,
-            };
-          } else {
-            const info = imageSize(fullPath);
-            metadata.size = {width: info.width, height: info.height};
-          }
-        } catch (err) {
-          Logger.debug(LOG_TAG, 'Error parsing exif', fullPath, err);
-        try {
-            const info = imageSize(fullPath);
-            metadata.size = {width: info.width, height: info.height};
-          } catch (e) {
-            metadata.size = {width: 1, height: 1};
-          }
-        }
-
-        try {
+        try { //Parse iptc data using the IptcParser, which works correctly for both UTF-8 and ASCII
           const iptcData = IptcParser.parse(data);
           if (iptcData.country_or_primary_location_name) {
             metadata.positionData = metadata.positionData || {};
@@ -351,49 +254,72 @@ export class MetadataLoader {
           // Logger.debug(LOG_TAG, 'Error parsing iptc data', fullPath, err);
         }
 
+        try {
+          const exif = ExifParserFactory.create(data).parse();
+          //TODO only image size left to handle. Maybe just fallback to imageSize()
+          if (exif.imageSize) {
+            metadata.size = {
+              width: exif.imageSize.width,
+              height: exif.imageSize.height,
+            };
+          } else if (
+            exif.tags.RelatedImageWidth &&
+            exif.tags.RelatedImageHeight
+          ) {
+            metadata.size = {
+              width: exif.tags.RelatedImageWidth,
+              height: exif.tags.RelatedImageHeight,
+            };
+          } else if (
+            exif.tags.ImageWidth &&
+            exif.tags.ImageHeight
+          ) {
+            metadata.size = {
+              width: exif.tags.ImageWidth,
+              height: exif.tags.ImageHeight,
+            };
+          } else {
+            const info = imageSize(fullPath);
+            metadata.size = {width: info.width, height: info.height};
+          }
+        } catch (err) {
+          Logger.debug(LOG_TAG, 'Error parsing exif', fullPath, err);
+        try {
+            const info = imageSize(fullPath);
+            metadata.size = {width: info.width, height: info.height};
+          } catch (e) {
+            metadata.size = {width: 1, height: 1};
+          }
+        }
+
         if (!metadata.creationDate) {
           // creationDate can be negative, when it was created before epoch (1970)
           metadata.creationDate = 0;
         }
 
         try {
-          const exifrOptions = {
-            tiff: true,
-            xmp: true,
-            icc: false,
-            jfif: false, //not needed and not supported for png
-            ihdr: true,
-            iptc: false, //exifr reads UTF8-encoded data wrongly
-            exif: true,
-            gps: true,
-            translateValues: false, //don't translate orientation from numbers to strings etc.
-            mergeOutput: false //don't merge output, because things like Microsoft Rating (percent) and xmp.rating will be merged
-        };
-        
+       
         const exif = await exifr.parse(data, exifrOptions);
-          if (exif.xmp && exif.xmp.Rating) {
-            metadata.rating = exif.xmp.Rating;
-            if (metadata.rating < 0) {
-              metadata.rating = 0;
-            }
+        //exif is structured in sections, we read the data by section
+        //dc-section (subject is the only tag we want from dc)
+        if (exif.dc &&
+          exif.dc.subject &&
+          exif.dc.subject.length > 0) {
+          const subj = Array.isArray(exif.dc.subject) ? exif.dc.subject : [exif.dc.subject];
+          if (metadata.keywords === undefined) {
+              metadata.keywords = [];
           }
-          if (exif.dc &&
-              exif.dc.subject &&
-              exif.dc.subject.length > 0) {
-            const subj = Array.isArray(exif.dc.subject) ? exif.dc.subject : [exif.dc.subject];
-            if (metadata.keywords === undefined) {
-                metadata.keywords = [];
-            }
-            for (const kw of subj) {
-                if (metadata.keywords.indexOf(kw) === -1) {
-                    metadata.keywords.push(kw);
-                }
-            }
+          for (const kw of subj) {
+              if (metadata.keywords.indexOf(kw) === -1) {
+                  metadata.keywords.push(kw);
+              }
+          }
         }
+        //ifd0 section
+        if (exif.ifd0) {
           let orientation = OrientationTypes.TOP_LEFT;
-          if (exif.ifd0 &&
-            exif.ifd0.Orientation) {
-            orientation = parseInt(
+          if (exif.ifd0.Orientation) {
+              orientation = parseInt(
               exif.ifd0.Orientation as any,
               10
             ) as number;
@@ -405,6 +331,80 @@ export class MetadataLoader {
             metadata.size.width = metadata.size.height;
             metadata.size.height = height;
           }
+          if (exif.idf0.Make && exif.idf0.Make !== '') {
+            metadata.cameraData = metadata.cameraData || {};
+            metadata.cameraData.make = '' + exif.idf0.Make;
+          }
+          if (exif.idf0.Model && exif.idf0.Model !== '') {
+            metadata.cameraData = metadata.cameraData || {};
+            metadata.cameraData.model = '' + exif.idf0.Model;
+          }
+          if (exif.idf0.ModifyDate) {
+            //If this date exists, we use it for now. But it may be overwritten
+            //in the exif section, because CreateDate and DateTimeOriginal have preceedence
+            //DON'T move this below the exif section!
+            metadata.creationDate = exif.idf0.ModifyDate.valueOf();
+          }
+        }
+        //exif section
+        if (exif.exif) {
+          if (exif.exif.DateTimeOriginal || exif.exif.CreateDate) {
+            //Using lazy evaluation to give DateTimeOriginal preceedence
+            //over CreateDate
+            metadata.creationDate = (exif.exif.DateTimeOriginal || 
+                                     exif.exif.CreateDate).valueOf();
+          }
+          if (exif.exif.LensModel && exif.exif.LensModel !== '') {
+            metadata.cameraData = metadata.cameraData || {};
+            metadata.cameraData.lens = '' + exif.exif.LensModel;
+          }
+          if (Utils.isUInt32(exif.exif.ISO)) {
+            metadata.cameraData = metadata.cameraData || {};
+            metadata.cameraData.ISO = parseInt('' + exif.exif.ISO, 10);
+          }
+          if (Utils.isFloat32(exif.exif.FocalLength)) {
+              metadata.cameraData = metadata.cameraData || {};
+              metadata.cameraData.focalLength = parseFloat(
+                '' + exif.exif.FocalLength
+              );
+          }
+          if (Utils.isFloat32(exif.exif.ExposureTime)) {
+            metadata.cameraData = metadata.cameraData || {};
+            metadata.cameraData.exposure = parseFloat(
+              parseFloat('' + exif.exif.ExposureTime).toFixed(6)
+            );
+          }
+          if (Utils.isFloat32(exif.exif.FNumber)) {
+            metadata.cameraData = metadata.cameraData || {};
+            metadata.cameraData.fStop = parseFloat(
+              parseFloat('' + exif.exif.FNumber).toFixed(2)
+            );
+          }
+        }
+        //gps section
+        if (exif.gps) {
+          metadata.positionData = metadata.positionData || {};
+          metadata.positionData.GPSData = {};
+
+          if (Utils.isFloat32(exif.gps.longitude)) {
+            metadata.positionData.GPSData.longitude = parseFloat(
+              exif.gps.longitude.toFixed(6)
+            );
+          }
+          if (Utils.isFloat32(exif.gps.latitude)) {
+            metadata.positionData.GPSData.latitude = parseFloat(
+              exif.gps.latitude.toFixed(6)
+            );
+          }
+        }
+        //xmp section
+        if (exif.xmp && exif.xmp.Rating) {
+          metadata.rating = exif.xmp.Rating;
+          if (metadata.rating < 0) {
+            metadata.rating = 0;
+          }
+        }
+
 
           if (Config.Faces.enabled &&
             exif["mwg-rs"] &&
