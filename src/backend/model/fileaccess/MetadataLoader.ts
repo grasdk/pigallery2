@@ -201,14 +201,18 @@ export class MetadataLoader {
       return Date.parse(timestamp.replace(':', '-').replace(':', '-') + (offset ? offset : '+00:00'));
     }
 
-    const getTimeOffsetByGPSStamp = (timestamp: string, gps: any) => {
-      if (gps &&
+    const getTimeOffsetByGPSStamp = (timestamp: string, gpsTimeStamp: string, gps: any) => {
+      let gpsTS = gpsTimeStamp;
+      if (!gpsTS &&
+          gps &&
           gps.GPSDateStamp &&
           gps.GPSTimeStamp) {
         //GPS timestamp is always UTC (+00:00)
-        let gpsTimestamp = gps.GPSDateStamp.replaceAll(':', '-') + gps.GPSTimeStamp.join(':')+'+00:00';
-        //offset in minutes is the difference between given timestamp and gps timestamp
-        let offsetMinutes = ((Date.parse(timestamp) - Date.parse(gpsTimestamp)) / 1000 / 60);
+        gpsTS = gps.GPSDateStamp.replaceAll(':', '-') + gps.GPSTimeStamp.join(':')+'+00:00';
+      }
+      if (gpsTS) {
+        //offset in minutes is the difference between gps timestamp and given timestamp
+        let offsetMinutes = (Date.parse(gpsTS) - Date.parse(timestamp.replace(':', '-').replace(':', '-'))) / 1000 / 60;
         if (-720 <= offsetMinutes && offsetMinutes <= 840) { 
           //valid offset is within -12 and +14 hrs (https://en.wikipedia.org/wiki/List_of_UTC_offsets)
           return (offsetMinutes<0?"-":"+") + //leading +/-
@@ -334,7 +338,7 @@ export class MetadataLoader {
                 metadata.creationDate = timestampToMS(exif.exif.DateTimeOriginal, exif.exif.OffsetTimeOriginal);
                 metadata.creationDateOffset = exif.exif.OffsetTimeOriginal;
               } else {
-                let alt_offset = exif.exif.OffsetTimeDigitized || exif.exif.OffsetTime || getTimeOffsetByGPSStamp(exif.exif.DateTimeOriginal, exif.gps);
+                let alt_offset = exif.exif.OffsetTimeDigitized || exif.exif.OffsetTime || getTimeOffsetByGPSStamp(exif.exif.DateTimeOriginal, exif.exif.GPSTimeStamp, exif.gps);
                 metadata.creationDate = timestampToMS(exif.exif.DateTimeOriginal, alt_offset);
                 metadata.creationDateOffset = alt_offset;
               }
@@ -344,7 +348,7 @@ export class MetadataLoader {
                 metadata.creationDate = timestampToMS(exif.exif.CreateDate, exif.exif.OffsetTimeDigitized);
                 metadata.creationDateOffset = exif.exif.OffsetTimeDigitized;
               } else {
-                let alt_offset = exif.exif.OffsetTimeOriginal || exif.exif.OffsetTime || getTimeOffsetByGPSStamp(exif.exif.DateTimeOriginal, exif.gps);
+                let alt_offset = exif.exif.OffsetTimeOriginal || exif.exif.OffsetTime || getTimeOffsetByGPSStamp(exif.exif.DateTimeOriginal, exif.exif.GPSTimeStamp, exif.gps);
                 metadata.creationDate = timestampToMS(exif.exif.DateTimeOriginal, alt_offset);
                 metadata.creationDateOffset = alt_offset;
               }
@@ -354,7 +358,7 @@ export class MetadataLoader {
                 metadata.creationDate = timestampToMS(exif.ifd0.ModifyDate, exif.exif?.OffsetTime);
                 metadata.creationDateOffset = exif.exif?.OffsetTime
               } else {
-                let alt_offset = exif.exif.DateTimeOriginal || exif.exif.OffsetTimeDigitized || getTimeOffsetByGPSStamp(exif.ifd0.ModifyDate, exif.gps);
+                let alt_offset = exif.exif.DateTimeOriginal || exif.exif.OffsetTimeDigitized || getTimeOffsetByGPSStamp(exif.ifd0.ModifyDate, exif.exif.GPSTimeStamp, exif.gps);
                 metadata.creationDate = timestampToMS(exif.ifd0.ModifyDate, alt_offset);
                 metadata.creationDateOffset = alt_offset;
               }

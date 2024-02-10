@@ -79,7 +79,23 @@ describe('MetadataLoader', () => {
     const expected = require(path.join(__dirname, '/../../../assets/timestamps/sydney_opera_house.json'));
     expect(Utils.clone(data)).to.be.deep.equal(expected);
   });
-
+  it('should load jpg with timestamps and gps (UTC) and calculate offset +10', async () => {
+    const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/timestamps/sydney_opera_house_no_tsoffset_but_gps_utc.jpg'));
+    const expected = require(path.join(__dirname, '/../../../assets/timestamps/sydney_opera_house_no_tsoffset_but_gps_utc.json'));
+    expect(Utils.clone(data)).to.be.deep.equal(expected);
+  });
+  it('should load jpg with timestamps, timezone BST (UTC+1) and gps (UTC)', async () => {
+    const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/timestamps/big_ben.jpg'));
+    const expected = require(path.join(__dirname, '/../../../assets/timestamps/big_ben.json'));
+    expect(Utils.clone(data)).to.be.deep.equal(expected);
+  });
+  /*
+  it('should load jpg with timestamps and gps (UTC) and calculate offset +1', async () => {
+    const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/timestamps/sydney_opera_house_no_tsoffset_but_gps_utc.jpg'));
+    const expected = require(path.join(__dirname, '/../../../assets/timestamps/sydney_opera_house_no_tsoffset_but_gps_utc.json'));
+    expect(Utils.clone(data)).to.be.deep.equal(expected);
+  });
+*/
   describe('should load jpg with proper height and orientation', () => {
     it('jpg 1', async () => {
       const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/orientation/broken_orientation_exif.jpg'));
