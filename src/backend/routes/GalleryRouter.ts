@@ -16,9 +16,9 @@ export class GalleryRouter {
     this.addGetImageIcon(app);
     this.addGetVideoIcon(app);
     this.addGetResizedPhoto(app);
+    this.addGetBestFitVideo(app);
     this.addGetVideoThumbnail(app);
     this.addGetImage(app);
-    this.addGetBestFitVideo(app);
     this.addGetVideo(app);
     this.addGetMetaFile(app);
     this.addGetBestFitMetaFile(app);
