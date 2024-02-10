@@ -33,6 +33,7 @@ export interface PhotoMetadata extends MediaMetadata {
   positionData?: PositionMetaData;
   size: MediaDimension;
   creationDate: number;
+  creationDateOffset?: string;
   fileSize: number;
   faces?: FaceRegion[];
 }

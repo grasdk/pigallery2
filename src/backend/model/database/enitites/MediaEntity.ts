@@ -105,6 +105,10 @@ export class MediaMetadataEntity implements MediaMetadata {
   })
   @Index()
   creationDate: number;
+  
+  @Column('text')
+  creationDateOffset?: string;
+
 
   @Column('int', {unsigned: true})
   fileSize: number;

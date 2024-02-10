@@ -9,7 +9,8 @@
     "model": "Canon EOS 600D"
   },
   "caption": "Bambi Caption",
-  "creationDate": -11630935227000,
+  "creationDate": -11630942427000,
+  "creationDateOffset": "+02:00",
   "faces": [
     {
       "box": {

@@ -24,8 +24,13 @@ describe('MetadataLoader', () => {
 
   it('should load png', async () => {
     const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/test_png.png'));
-    delete data.creationDate; // creation time for png not supported
     const expected = require(path.join(__dirname, '/../../../assets/test_png.json'));
+    expect(Utils.clone(data)).to.be.deep.equal(expected);
+  });
+
+  it('should load png with keywords and dates', async () => {
+    const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/png_with_keyword_and_dates.png'));
+    const expected = require(path.join(__dirname, '/../../../assets/png_with_keyword_and_dates.json'));
     expect(Utils.clone(data)).to.be.deep.equal(expected);
   });
 
