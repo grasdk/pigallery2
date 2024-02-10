@@ -394,7 +394,6 @@ export class TestHelper {
       positionData: pd,
       size: sd,
       creationDate: Date.now() + ++TestHelper.creationCounter,
-      creationDateOffset: "+00:00",
       fileSize: rndInt(10000),
       caption: rndStr(),
       rating: rndInt(5) as any,
