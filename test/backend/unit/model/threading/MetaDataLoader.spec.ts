@@ -74,6 +74,12 @@ describe('MetadataLoader', () => {
     expect(Utils.clone(data)).to.be.deep.equal(expected);
   });
 
+  it('should load jpg with timestamps, timezone AEST (UTC+10) and gps (UTC)', async () => {
+    const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/timestamps/sydney_opera_house.jpg'));
+    const expected = require(path.join(__dirname, '/../../../assets/timestamps/sydney_opera_house.json'));
+    expect(Utils.clone(data)).to.be.deep.equal(expected);
+  });
+
   describe('should load jpg with proper height and orientation', () => {
     it('jpg 1', async () => {
       const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/orientation/broken_orientation_exif.jpg'));
