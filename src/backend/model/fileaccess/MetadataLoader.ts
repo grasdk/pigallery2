@@ -207,6 +207,7 @@ export class MetadataLoader {
           gps.GPSTimeStamp) {
         //GPS timestamp is always UTC (+00:00)
         let gpsTimestamp = gps.GPSDateStamp.replaceAll(':', '-') + gps.GPSTimeStamp.join(':')+'+00:00';
+        //offset in minutes is the difference between given timestamp and gps timestamp
         let offsetMinutes = ((Date.parse(timestamp) - Date.parse(gpsTimestamp)) / 1000 / 60);
         if (-720 <= offsetMinutes && offsetMinutes <= 840) { 
           //valid offset is within -12 and +14 hrs (https://en.wikipedia.org/wiki/List_of_UTC_offsets)
