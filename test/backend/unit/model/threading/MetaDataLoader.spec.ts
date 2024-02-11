@@ -28,9 +28,9 @@ describe('MetadataLoader', () => {
     expect(Utils.clone(data)).to.be.deep.equal(expected);
   });
 
-  it('should load png with keywords and dates', async () => {
-    const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/png_with_keyword_and_dates.png'));
-    const expected = require(path.join(__dirname, '/../../../assets/png_with_keyword_and_dates.json'));
+  it('should load png with faces and dates', async () => {
+    const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/png_with_faces_and_dates.png'));
+    const expected = require(path.join(__dirname, '/../../../assets/png_with_faces_and_dates.json'));
     expect(Utils.clone(data)).to.be.deep.equal(expected);
   });
 
