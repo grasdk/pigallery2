@@ -202,22 +202,22 @@ export class MetadataLoader {
     }
 
     const getTimeOffsetByGPSStamp = (timestamp: string, gpsTimeStamp: string, gps: any) => {
-      let gpsTS = gpsTimeStamp;
-      if (!gpsTS &&
-          gps &&
-          gps.GPSDateStamp &&
-          gps.GPSTimeStamp) {
+      let UTCTimestamp = gpsTimeStamp;
+      if (!UTCTimestamp &&
+        gps &&
+        gps.GPSDateStamp &&
+        gps.GPSTimeStamp) {
         //GPS timestamp is always UTC (+00:00)
-        gpsTS = gps.GPSDateStamp.replaceAll(':', '-') + gps.GPSTimeStamp.join(':')+'+00:00';
+        UTCTimestamp = gps.GPSDateStamp.replaceAll(':', '-') + gps.GPSTimeStamp.join(':') + '+00:00';
       }
-      if (gpsTS) {
+      if (UTCTimestamp) {
         //offset in minutes is the difference between gps timestamp and given timestamp
-        let offsetMinutes = (Date.parse(gpsTS) - Date.parse(timestamp.replace(':', '-').replace(':', '-'))) / 1000 / 60;
-        if (-720 <= offsetMinutes && offsetMinutes <= 840) { 
+        let offsetMinutes = (Date.parse(UTCTimestamp) - Date.parse(timestamp.replace(':', '-').replace(':', '-'))) / 1000 / 60;
+        if (-720 <= offsetMinutes && offsetMinutes <= 840) {
           //valid offset is within -12 and +14 hrs (https://en.wikipedia.org/wiki/List_of_UTC_offsets)
-          return (offsetMinutes<0?"-":"+") + //leading +/-
-                  ("0"+Math.trunc(Math.abs(offsetMinutes) / 60)).slice(-2) + ":" +  //zeropadded hours and :
-                  ("0"+           Math.abs(offsetMinutes) % 60).slice(-2);          //zeropadded minutes
+          return (offsetMinutes < 0 ? "-" : "+") +                              //leading +/-
+            ("0" + Math.trunc(Math.abs(offsetMinutes) / 60)).slice(-2) + ":" +  //zeropadded hours and ':'
+            ("0" + Math.abs(offsetMinutes) % 60).slice(-2);                     //zeropadded minutes
         } else {
           return undefined;
         }
@@ -246,6 +246,15 @@ export class MetadataLoader {
         } catch (err) {
           // ignoring errors
         }
+        try {
+          //read the actual image size, don't rely on tags for this
+          const info = imageSize(fullPath);
+          metadata.size = { width: info.width, height: info.height };
+        } catch (e) {
+          //in case of failure, set dimensions to 0 so they may be read via tags
+          metadata.size = { width: 0, height: 0 };
+        }
+
 
         try { //Parse iptc data using the IptcParser, which works correctly for both UTF-8 and ASCII
           const iptcData = IptcParser.parse(data);
@@ -352,7 +361,7 @@ export class MetadataLoader {
                 metadata.creationDate = timestampToMS(exif.exif.DateTimeOriginal, alt_offset);
                 metadata.creationDateOffset = alt_offset;
               }
-            } else if (exif.ifd0?.ModifyDate) { //using else if here, because DateTimeOriginal and Create data have preceedence
+            } else if (exif.ifd0?.ModifyDate) { //using else if here, because DateTimeOriginal and CreatDate have preceedence
               if (exif.exif.OffsetTime) {
                 //exif.Offsettime is the offset corresponding to ifd0.ModifyDate
                 metadata.creationDate = timestampToMS(exif.ifd0.ModifyDate, exif.exif?.OffsetTime);
@@ -415,27 +424,38 @@ export class MetadataLoader {
 
             if (metadata.positionData) {
               if (!metadata.positionData.GPSData ||
-                  Object.keys(metadata.positionData.GPSData).length === 0) {
+                Object.keys(metadata.positionData.GPSData).length === 0) {
                 metadata.positionData.GPSData = undefined;
                 metadata.positionData = undefined;
               }
             }
           }
+          //photoshop section (sometimes has City, Country and State)
+          if (exif.photoshop) {
+            function unescape(tag: string) {
+              return tag.replace(/&#([0-9]{1,3});/gi, function (match, numStr) {
+                return String.fromCharCode(parseInt(numStr, 10));
+              });
+            }
 
-          
-          //Try to fix image size if possible START
-          ///////////////////////////////////////
-          if (metadata.size.width <= 0 || metadata.size.height <= 0) {
-            //if none of the tags gave us the image size, we will try to use the image-size library instead
-            try {
-              //read the actual image size, don't rely on tags for this
-              const info = imageSize(fullPath);
-              metadata.size = { width: info.width, height: info.height };
-            } catch (e) {
-              metadata.size = { width: Math.max(metadata.size.width, 1), height: Math.max(metadata.size.height, 1) };
+            if (!metadata.positionData?.country && exif.photoshop.Country) {
+              metadata.positionData = metadata.positionData || {};
+              metadata.positionData.country = unescape(exif.photoshop.Country);
+            }
+            if (!metadata.positionData?.state && exif.photoshop.State) {
+              metadata.positionData = metadata.positionData || {};
+              metadata.positionData.state = unescape(exif.photoshop.State);
+            }
+            if (!metadata.positionData?.city && exif.photoshop.City) {
+              metadata.positionData = metadata.positionData || {};
+              metadata.positionData.city = unescape(exif.photoshop.City);
             }
           }
-    
+
+          ///////////////////////////////////////
+          metadata.size.height = Math.max(metadata.size.height, 1); //ensure height dimension is positive
+          metadata.size.width  = Math.max(metadata.size.width,  1); //ensure width  dimension is positive
+
           //Before moving on to the XMP section (particularly the regions (mwg-rs))
           //we need to switch width and height for images that are rotated sideways
           if (4 < orientation) { //Orientation is sideways (rotated 90% or 270%)
@@ -446,8 +466,6 @@ export class MetadataLoader {
             metadata.size.height = height;
           }
           ///////////////////////////////////////
-          //Try to fix image size if possible END
-
 
           //xmp section
           if (exif.xmp && exif.xmp.Rating) {
