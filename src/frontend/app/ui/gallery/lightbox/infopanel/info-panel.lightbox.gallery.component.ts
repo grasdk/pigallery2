@@ -148,7 +148,7 @@ export class InfoPanelLightboxComponent implements OnInit, OnChanges {
   isThisYear(): boolean {
     return (
         new Date().getFullYear() ===
-        new Date(this.media.metadata.creationDate).getUTCFullYear()
+        new Date(this.media.metadata.creationDate).getUTCFullYear() //TODO
     );
   }
 
