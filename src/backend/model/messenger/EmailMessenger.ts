@@ -69,7 +69,7 @@ export class EmailMessenger extends Messenger<{
         (media[i].metadata as PhotoMetadata).positionData?.country :
         ((media[i].metadata as PhotoMetadata).positionData?.city ?
           (media[i].metadata as PhotoMetadata).positionData?.city : '');
-      const caption = (new Date(media[i].metadata.creationDate)).getFullYear() + (location ? ', ' + location : '');
+      const caption = (new Date(media[i].metadata.creationDate)).getFullYear() + (location ? ', ' + location : '');  //TODO: CreationDate
       attachments.push({
         filename: media[i].name,
         path: media[i].thumbnailPath,
