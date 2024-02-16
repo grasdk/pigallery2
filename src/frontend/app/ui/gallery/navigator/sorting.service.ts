@@ -184,7 +184,7 @@ export class GallerySortingService {
   private getGroupByNameFn(grouping: GroupingMethod) {
     switch (grouping.method) {
       case SortByTypes.Date:
-        return (m: MediaDTO) => this.datePipe.transform(m.metadata.creationDate, 'longDate', m.metadata.creationDateOffset); //TODO: CreationDate
+        return (m: MediaDTO) => this.datePipe.transform(m.metadata.creationDate, 'longDate', m.metadata.creationDateOffset);
 
       case SortByTypes.Name:
         return (m: MediaDTO) => m.name.at(0).toUpperCase();
@@ -296,7 +296,7 @@ export class GallerySortingService {
                       if (grouping.method === GroupByTypes.Date) {
                         // We do not need the youngest as we group by day. All photos are from the same day
                         c.mediaGroups.forEach(g => {
-                          g.date = Utils.makeUTCMidnight(new Date(g.media?.[0]?.metadata?.creationDate)); //TODO: CreationDate
+                          g.date = Utils.makeUTCMidnight(new Date(g.media?.[0]?.metadata?.creationDate));
                         });
                       }
 

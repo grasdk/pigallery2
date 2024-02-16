@@ -110,6 +110,20 @@ export class Utils {
     return d;
   }
 
+  static getUTCFullYear(d: number | Date, offset: string) {
+    if (!(d instanceof Date)) {
+      d = new Date(d);
+    }
+    return new Date(new Date(d).toISOString().substring(0,19) + (offset ? offset : '')).getUTCFullYear();
+  }
+
+  static getFullYear(d: number | Date, offset: string) {
+    if (!(d instanceof Date)) {
+      d = new Date(d);
+    }
+    return new Date(new Date(d).toISOString().substring(0,19) + (offset ? offset : '')).getFullYear();
+  }
+
   static renderDataSize(size: number): string {
     const postFixes = ['B', 'KB', 'MB', 'GB', 'TB'];
     let index = 0;

@@ -54,10 +54,10 @@
     </div>
     <div class="col-11">
       <div class="details-main">
-        {{ media.metadata.creationDate | date: (isThisYear() ? 'MMMM d' : 'longDate') : (media.metadata.creationDateOffset? media.metadata.creationDateOffset : 'UTC') }}
+        {{ media.metadata.creationDate | date: (isThisYear() ? 'MMMM d' : 'longDate') : (media.metadata.creationDateOffset ? media.metadata.creationDateOffset : 'UTC') }}
       </div>
       <div class="details-sub  text-secondary row">
-        <div class="col-12">{{ media.metadata.creationDate | date : (media.metadata.creationDateOffset? 'EEEE, HH:mm:ss ZZZZZ' : EEEE, HH:mm:ss') : (media.metadata.creationDateOffset? media.metadata.creationDateOffset : 'UTC') }}</div>
+        <div class="col-12">{{ media.metadata.creationDate | date : (media.metadata.creationDateOffset ? 'EEEE, HH:mm:ss ZZZZZ' : 'EEEE, HH:mm:ss') : (media.metadata.creationDateOffset ? media.metadata.creationDateOffset : 'UTC') }}</div>
       </div>
     </div>
   </div>
