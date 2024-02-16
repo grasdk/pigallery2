@@ -498,11 +498,14 @@ export class ControlsLightboxComponent implements OnDestroy, OnInit, OnChanges {
       case LightBoxTitleTexts.date:
         return this.datePipe.transform(m.metadata.creationDate, 'longDate', m.metadata.creationDateOffset);
       case LightBoxTitleTexts.location:
-        return (
-          m.metadata.positionData?.city ||
-          m.metadata.positionData?.state ||
-          m.metadata.positionData?.country || ''
-        ).trim();
+        if (!m.metadata.positionData) {
+          return '';
+        }
+        return [
+          m.metadata.positionData.city,
+          m.metadata.positionData.state,
+          m.metadata.positionData.country
+        ].filter(elm => elm).join(', ').trim(); //Filter removes empty elements, join concats the values separated by ', '
       case LightBoxTitleTexts.camera:
         return m.metadata.cameraData?.model;
       case LightBoxTitleTexts.lens:

@@ -183,17 +183,11 @@ export class InfoPanelLightboxComponent implements OnInit, OnChanges {
     if (!(this.media as PhotoDTO).metadata.positionData) {
       return '';
     }
-    let str =
-        (this.media as PhotoDTO).metadata.positionData.city ||
-        (this.media as PhotoDTO).metadata.positionData.state ||
-        '';
-
-    if (str.length !== 0) {
-      str += ', ';
-    }
-    str += (this.media as PhotoDTO).metadata.positionData.country || '';
-
-    return str;
+    return [
+      (this.media as PhotoDTO).metadata.positionData.city,
+      (this.media as PhotoDTO).metadata.positionData.state,
+      (this.media as PhotoDTO).metadata.positionData.country
+    ].filter(elm => elm).join(', ').trim(); //Filter removes empty elements, join concats the values separated by ', '
   }
 
   close(): void {
