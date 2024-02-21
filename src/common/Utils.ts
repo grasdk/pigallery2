@@ -136,11 +136,11 @@ export class Utils {
   }
 
   static getOffsetMinutes(offsetString: string) { //Convert offset string (+HH:MM or -HH:MM) into a minute value
-    const regex = /^([+\-](0[0-9]|1[0-4]):[0-5][0-9])$/; //checks if offset is between -14:00 and +14:00. 
+    const regex = /^([+-](0[0-9]|1[0-4]):[0-5][0-9])$/;  //checks if offset is between -14:00 and +14:00. 
                                                          //-12:00 is the lowest valid UTC-offset, but we allow down to -14 for efficiency
     if (regex.test(offsetString)) {
-      let hhmm = offsetString.split(":");
-      let hours = parseInt(hhmm[0]);
+      const hhmm = offsetString.split(":");
+      const hours = parseInt(hhmm[0]);
       return hours < 0 ? ((hours*60) - parseInt(hhmm[1])) : ((hours*60) + parseInt(hhmm[1]));
     } else {
       return undefined;
