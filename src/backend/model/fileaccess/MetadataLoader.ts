@@ -226,14 +226,7 @@ export class MetadataLoader {
         //offset in minutes is the difference between gps timestamp and given timestamp
         //to calculate this correctly, we have to work with the same offset
         const offsetMinutes = (timestampToMS(timestamp, '+00:00')- timestampToMS(UTCTimestamp, '+00:00')) / 1000 / 60;
-        if (-720 <= offsetMinutes && offsetMinutes <= 840) {
-          //valid offset is within -12 and +14 hrs (https://en.wikipedia.org/wiki/List_of_UTC_offsets)
-          return (offsetMinutes < 0 ? "-" : "+") +                              //leading +/-
-            ("0" + Math.trunc(Math.abs(offsetMinutes) / 60)).slice(-2) + ":" +  //zeropadded hours and ':'
-            ("0" + Math.abs(offsetMinutes) % 60).slice(-2);                     //zeropadded minutes
-        } else {
-          return undefined;
-        }
+        return Utils.getOffsetString(offsetMinutes);
       } else {
         return undefined;
       }

@@ -124,6 +124,29 @@ export class Utils {
     return new Date(new Date(d).toISOString().substring(0,19) + (offset ? offset : '')).getFullYear();
   }
 
+  static getOffsetString(offsetMinutes: number) {
+    if (-720 <= offsetMinutes && offsetMinutes <= 840) {
+      //valid offset is within -12 and +14 hrs (https://en.wikipedia.org/wiki/List_of_UTC_offsets)
+      return (offsetMinutes < 0 ? "-" : "+") +                              //leading +/-
+        ("0" + Math.trunc(Math.abs(offsetMinutes) / 60)).slice(-2) + ":" +  //zeropadded hours and ':'
+        ("0" + Math.abs(offsetMinutes) % 60).slice(-2);                     //zeropadded minutes
+    } else {
+      return undefined;
+    }
+  }
+
+  static getOffsetMinutes(offsetString: string) { //Convert offset string (+HH:MM or -HH:MM) into a minute value
+    const regex = /^([+\-](0[0-9]|1[0-4]):[0-5][0-9])$/; //checks if offset is between -14:00 and +14:00. 
+                                                         //-12:00 is the lowest valid UTC-offset, but we allow down to -14 for efficiency
+    if (regex.test(offsetString)) {
+      let hhmm = offsetString.split(":");
+      let hours = parseInt(hhmm[0]);
+      return hours < 0 ? ((hours*60) - parseInt(hhmm[1])) : ((hours*60) + parseInt(hhmm[1]));
+    } else {
+      return undefined;
+    }
+  }
+
   static renderDataSize(size: number): string {
     const postFixes = ['B', 'KB', 'MB', 'GB', 'TB'];
     let index = 0;
