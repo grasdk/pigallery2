@@ -146,13 +146,25 @@ export class ControlsLightboxComponent implements OnDestroy, OnInit, OnChanges {
     }
   }
 
-  wheel($event: { deltaY: number }): void {
-    if (!this.activePhoto || this.activePhoto.gridMedia.isVideo()) {
+  wheel($event: { deltaX: number, deltaY: number }): void {
+    if (!this.activePhoto) {
+      return;
+    }
+    if ($event.deltaX < 0) {
+      if (this.navigation.hasPrev) {
+        this.previousPhoto.emit();
+      }
+    } else if ($event.deltaX > 0) {
+      if (this.navigation.hasNext) {
+        this.nextMediaManuallyTriggered();
+      }
+    }
+    if (this.activePhoto.gridMedia.isVideo()) {
       return;
     }
     if ($event.deltaY < 0) {
       this.zoomIn();
-    } else {
+    } else if ($event.deltaY > 0) {
       this.zoomOut();
     }
   }
@@ -540,4 +552,3 @@ export class ControlsLightboxComponent implements OnDestroy, OnInit, OnChanges {
   }
 
 }
-
