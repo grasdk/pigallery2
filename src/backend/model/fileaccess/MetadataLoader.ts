@@ -194,7 +194,7 @@ export class MetadataLoader {
       translateValues: false, //don't translate orientation from numbers to strings etc.
       mergeOutput: false //don't merge output, because things like Microsoft Rating (percent) and xmp.rating will be merged
     };
-
+    
     //function to convert timestamp into milliseconds taking offset into account
     const timestampToMS = (timestamp: string, offset: string) => {
       if (!timestamp) {
@@ -240,10 +240,21 @@ export class MetadataLoader {
     }
 
     try {
-      const data = Buffer.allocUnsafe(Config.Media.photoMetadataSize);
+      let bufferSize = Config.Media.photoMetadataSize;
+      try {
+        const stat = fs.statSync(fullPath);
+        metadata.fileSize = stat.size;
+        //No reason to make the buffer larger than the actual file
+        bufferSize = Math.min(Config.Media.photoMetadataSize, metadata.fileSize);
+        metadata.creationDate = stat.mtime.getTime();
+      } catch (err) {
+        // ignoring errors
+      }
+
+      const data = Buffer.allocUnsafe(bufferSize);
       fileHandle = await fs.promises.open(fullPath, 'r');
       try {
-        await fileHandle.read(data, 0, Config.Media.photoMetadataSize, 0);
+        await fileHandle.read(data, 0, bufferSize, 0);
       } catch (err) {
         Logger.error(LOG_TAG, 'Error during reading photo: ' + fullPath);
         console.error(err);
@@ -252,13 +263,6 @@ export class MetadataLoader {
         await fileHandle.close();
       }
       try {
-        try {
-          const stat = fs.statSync(fullPath);
-          metadata.fileSize = stat.size;
-          metadata.creationDate = stat.mtime.getTime();
-        } catch (err) {
-          // ignoring errors
-        }
         try {
           //read the actual image size, don't rely on tags for this
           const info = imageSize(fullPath);

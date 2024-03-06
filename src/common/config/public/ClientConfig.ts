@@ -11,7 +11,7 @@ declare let $localize: (s: TemplateStringsArray) => string;
 if (typeof $localize === 'undefined') {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  global.$localize = (s) => s;
+  global.$localize = (s) => s[0];
 }
 
 
@@ -1034,7 +1034,6 @@ export class ThemesConfig {
       name: $localize`Selected theme css`, //this is a 'hack' to the UI settings. UI will only show the selected setting's css
       uiDisabled: (sb: ThemesConfig) => !sb.enabled,
       relevant: (c: ThemesConfig) => c.selectedTheme !== 'default',
-      uiType: 'SelectedThemeSettings'
     } as TAGS,
     description: $localize`Adds these css settings as it is to the end of the body tag of the page.`
   })

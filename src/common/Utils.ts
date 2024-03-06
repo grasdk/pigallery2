@@ -147,6 +147,26 @@ export class Utils {
     }
   }
 
+  static isLeapYear(year: number) {
+    return (0 == year % 4) && (0 != year % 100) || (0 == year % 400)
+  }
+
+  static isDateFromLeapYear(date: Date) {
+    return Utils.isLeapYear(date.getFullYear());
+  }
+
+  // Get Day of Year
+  static getDayOfYear(date: Date) {
+    //Day-number at the start of Jan to Dec. A month baseline
+    const dayCount = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    const mn = date.getMonth();
+    let dayOfYear = dayCount[mn] + date.getDate(); //add the date to the month baseline
+    if (mn > 1 && Utils.isLeapYear((date.getFullYear()))) {
+      dayOfYear++; //Add an extra day for march to december (mn>1) on leap years
+    }
+    return dayOfYear;
+  }
+
   static renderDataSize(size: number): string {
     const postFixes = ['B', 'KB', 'MB', 'GB', 'TB'];
     let index = 0;

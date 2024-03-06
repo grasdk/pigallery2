@@ -764,7 +764,7 @@ export class SearchManager {
             tq.frequency === DatePatternFrequency.days_ago)) {
 
             if (isNaN(tq.agoNumber)) {
-              throw new Error('ago number is missing on date patter search query with frequency: ' + DatePatternFrequency[tq.frequency] + ', ago number: ' + tq.agoNumber);
+              throw new Error('ago number is missing on date pattern search query with frequency: ' + DatePatternFrequency[tq.frequency] + ', ago number: ' + tq.agoNumber);
             }
             const to = new Date();
             to.setHours(0, 0, 0, 0);
@@ -853,15 +853,16 @@ export class SearchManager {
             };
             switch (tq.frequency) {
               case DatePatternFrequency.every_year:
-                if (tq.daysLength >= 365) { // trivial result includes all photos
+                const d = new Date();
+                if (tq.daysLength >= (Utils.isDateFromLeapYear(d) ? 366: 365)) { // trivial result includes all photos
                   if (tq.negate) {
                     q.andWhere('FALSE');
                   }
                   return q;
                 }
-                const d = new Date();
-                const dayOfYear = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
-                addWhere('%j', dayOfYear - tq.daysLength < 0);
+                
+                const dayOfYear = Utils.getDayOfYear(d);
+                addWhere('%m%d', dayOfYear - tq.daysLength < 0);
                 break;
               case DatePatternFrequency.every_month:
                 if (tq.daysLength >= 31) { // trivial result includes all photos

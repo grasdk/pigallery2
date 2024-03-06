@@ -79,11 +79,11 @@ export class TemplateComponent implements OnInit, OnChanges, OnDestroy, ISetting
   public readonly ConfigStyle = ConfigStyle;
 
   constructor(
-      protected authService: AuthenticationService,
-      private navigation: NavigationService,
-      protected notification: NotificationService,
-      public settingsService: SettingsService,
-      public jobsService: ScheduledJobsService,
+    protected authService: AuthenticationService,
+    private navigation: NavigationService,
+    protected notification: NotificationService,
+    public settingsService: SettingsService,
+    public jobsService: ScheduledJobsService,
   ) {
   }
 
@@ -97,7 +97,7 @@ export class TemplateComponent implements OnInit, OnChanges, OnDestroy, ISetting
     this.nestedConfigs = [];
     for (const key of this.getKeys(this.states)) {
       if (this.states.value.__state[key].isConfigType &&
-          this.states?.value.__state[key].tags?.uiIcon) {
+        this.states?.value.__state[key].tags?.uiIcon) {
         this.nestedConfigs.push({
           id: this.ConfigPath + '.' + key,
           name: this.states?.value.__state[key].tags?.name,
@@ -112,8 +112,8 @@ export class TemplateComponent implements OnInit, OnChanges, OnDestroy, ISetting
   ngOnInit(): void {
 
     if (
-        !this.authService.isAuthenticated() ||
-        this.authService.user.value.role < UserRoles.Admin
+      !this.authService.isAuthenticated() ||
+      this.authService.user.value.role < UserRoles.Admin
     ) {
       this.navigation.toLogin();
       return;
@@ -143,7 +143,7 @@ export class TemplateComponent implements OnInit, OnChanges, OnDestroy, ISetting
     if (sliceFN) {
       this.sliceFN = sliceFN;
       this.settingsSubscription = this.settingsService.settings.subscribe(
-          this.onNewSettings
+        this.onNewSettings
       );
     }
   }
@@ -171,31 +171,31 @@ export class TemplateComponent implements OnInit, OnChanges, OnDestroy, ISetting
           }
 
           if (state.tags &&
-              ((state.tags.relevant && !state.tags.relevant(parent.value))
-                  || state.tags.secret)) {
+            ((state.tags.relevant && !state.tags.relevant(parent.value))
+              || state.tags.secret)) {
             return true;
           }
 
           // if all sub elements are hidden, hide the parent too.
           if (state.isConfigType) {
             if (state.value && state.value.__state &&
-                Object.keys(state.value.__state).findIndex(k => !st.value.__state[k].shouldHide()) === -1) {
+              Object.keys(state.value.__state).findIndex(k => !st.value.__state[k].shouldHide()) === -1) {
               return true;
             }
           }
 
           const forcedVisibility = !(state.tags?.priority > this.settingsService.configPriority ||
-              //if this value should not change in Docker, lets hide it
-              (this.settingsService.configPriority === ConfigPriority.basic &&
-                  state.tags?.dockerSensitive && this.settingsService.settings.value.Environment.isDocker));
+            //if this value should not change in Docker, lets hide it
+            (this.settingsService.configPriority === ConfigPriority.basic &&
+              state.tags?.dockerSensitive && this.settingsService.settings.value.Environment.isDocker));
 
           if (state.isConfigArrayType) {
             for (let i = 0; i < state.value?.length; ++i) {
               for (const k of Object.keys(state.value[i].__state)) {
                 if (!Utils.equalsFilter(
-                    state.value[i]?.__state[k]?.value,
-                    state.default[i] ? state.default[i][k] : undefined,
-                    ['default', '__propPath', '__created', '__prototype', '__rootConfig'])) {
+                  state.value[i]?.__state[k]?.value,
+                  state.default[i] ? state.default[i][k] : undefined,
+                  ['default', '__propPath', '__created', '__prototype', '__rootConfig'])) {
 
                   return false;
                 }
@@ -206,10 +206,10 @@ export class TemplateComponent implements OnInit, OnChanges, OnDestroy, ISetting
 
 
           return (!forcedVisibility &&
-              Utils.equalsFilter(state.value, state.default,
-                  ['__propPath', '__created', '__prototype', '__rootConfig']) &&
-              Utils.equalsFilter(state.original, state.default,
-                  ['__propPath', '__created', '__prototype', '__rootConfig']));
+            Utils.equalsFilter(state.value, state.default,
+              ['__propPath', '__created', '__prototype', '__rootConfig']) &&
+            Utils.equalsFilter(state.original, state.default,
+              ['__propPath', '__created', '__prototype', '__rootConfig']));
         };
       };
 
@@ -246,7 +246,7 @@ export class TemplateComponent implements OnInit, OnChanges, OnDestroy, ISetting
         }
         if (typeof state.original === 'object') {
           return Utils.equalsFilter(state.value, state.original,
-              ['__propPath', '__created', '__prototype', '__rootConfig', '__state']);
+            ['__propPath', '__created', '__prototype', '__rootConfig', '__state']);
         }
         if (typeof state.original !== 'undefined') {
           return state.value === state.original;
@@ -271,8 +271,16 @@ export class TemplateComponent implements OnInit, OnChanges, OnDestroy, ISetting
     this.getSettings();
   }
 
+  /**
+   * main template should list it
+   * @param c
+   */
   isExpandableConfig(c: ConfigState) {
     return c.isConfigType && !CustomSettingsEntries.iS(c);
+  }
+
+  isExpandableArrayConfig(c: ConfigState) {
+    return c.isConfigArrayType && !CustomSettingsEntries.iS(c);
   }
 
 
@@ -284,8 +292,8 @@ export class TemplateComponent implements OnInit, OnChanges, OnDestroy, ISetting
       await this.settingsService.updateSettings(state, this.ConfigPath);
       await this.getSettings();
       this.notification.success(
-          this.Name + ' ' + $localize`settings saved`,
-          $localize`Success`
+        this.Name + ' ' + $localize`settings saved`,
+        $localize`Success`
       );
       this.inProgress = false;
       return true;
@@ -328,7 +336,6 @@ export class TemplateComponent implements OnInit, OnChanges, OnDestroy, ISetting
         return 1;
       }
       return (s[a].tags?.name as string || a).localeCompare(s[b].tags?.name || b);
-
     });
     states.keys = keys;
     return states.keys;

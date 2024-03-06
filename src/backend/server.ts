@@ -67,14 +67,14 @@ export class Server {
     await ConfigDiagnostics.runDiagnostics();
     Logger.verbose(
       LOG_TAG,
-      'using config from ' +
+      () => 'using config from ' +
       (
         ConfigClassBuilder.attachPrivateInterface(Config)
           .__options as ConfigClassOptions<ServerConfig>
       ).configPath +
       ':'
     );
-    Logger.verbose(LOG_TAG, JSON.stringify(Config.toJSON({attachDescription: false}), (k, v) => {
+    Logger.verbose(LOG_TAG, () => JSON.stringify(Config.toJSON({attachDescription: false}), (k, v) => {
       const MAX_LENGTH = 80;
       if (typeof v === 'string' && v.length > MAX_LENGTH) {
         v = v.slice(0, MAX_LENGTH - 3) + '...';

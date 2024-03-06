@@ -11,7 +11,6 @@ import {
 } from '../../entities/job/JobScheduleDTO';
 import {
   ClientConfig,
-  ClientExtensionsConfig,
   ClientGPXCompressingConfig,
   ClientMediaConfig,
   ClientMetaFileConfig,
@@ -30,7 +29,8 @@ import {SearchQueryDTO, SearchQueryTypes, TextSearch,} from '../../entities/Sear
 import {SortByTypes} from '../../entities/SortingMethods';
 import {UserRoles} from '../../entities/UserDTO';
 import {MediaPickDTO} from '../../entities/MediaPickDTO';
-import {MessagingConfig} from './MessagingConfig';
+import {ServerExtensionsConfig} from './subconfigs/ServerExtensionsConfig';
+import {MessagingConfig} from './subconfigs/MessagingConfig';
 
 declare let $localize: (s: TemplateStringsArray) => string;
 
@@ -965,35 +965,6 @@ export class ServerServiceConfig extends ClientServiceConfig {
   Log: ServerLogConfig = new ServerLogConfig();
 }
 
-
-@SubConfigClass<TAGS>({softReadonly: true})
-export class ServerExtensionsConfig extends ClientExtensionsConfig {
-
-  @ConfigProperty({
-    tags: {
-      name: $localize`Extension folder`,
-      priority: ConfigPriority.underTheHood,
-      dockerSensitive: true
-    },
-    description: $localize`Folder where the app stores the extensions. Extensions live in their sub-folders.`,
-  })
-  folder: string = 'extensions';
-
-  @ConfigProperty({volatile: true})
-  list: string[] = [];
-
-  @ConfigProperty({type: 'object'})
-  configs: Record<string, unknown> = {};
-
-  @ConfigProperty({
-    tags: {
-      name: $localize`Clean up unused tables`,
-      priority: ConfigPriority.underTheHood,
-    },
-    description: $localize`Automatically removes all tables from the DB that are not used anymore.`,
-  })
-  cleanUpUnusedTables: boolean = true;
-}
 
 @SubConfigClass({softReadonly: true})
 export class ServerEnvironmentConfig {

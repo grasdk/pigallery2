@@ -73,6 +73,11 @@ export interface IExtensionEvents {
      * photos, videos and metafiles
      */
     DiskManager: {
+      excludeDir: IExtensionEvent<[{
+        name: string,
+        parentDirRelativeName: string,
+        parentDirAbsoluteName: string
+      }], boolean>,
       scanDirectory: IExtensionEvent<[
         string,
         DirectoryScanSettings], ParentDirectoryDTO>

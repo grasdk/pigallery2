@@ -184,7 +184,7 @@ export class GallerySortingService {
   private getGroupByNameFn(grouping: GroupingMethod) {
     switch (grouping.method) {
       case SortByTypes.Date:
-        return (m: MediaDTO) => this.datePipe.transform(m.metadata.creationDate, 'longDate', m.metadata.creationDateOffset);
+        return (m: MediaDTO) => this.datePipe.transform(m.metadata.creationDate, 'longDate', m.metadata.creationDateOffset ? m.metadata.creationDateOffset : 'UTC');
 
       case SortByTypes.Name:
         return (m: MediaDTO) => m.name.at(0).toUpperCase();

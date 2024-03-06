@@ -26,7 +26,7 @@ export class ExtensionObject<C> implements IExtensionObject<C> {
               events: IExtensionEvents) {
     const logger = createLoggerWrapper(`[Extension][${extensionId}]`);
     this._app = new ExtensionApp();
-    this.config = new ExtensionConfig<C>(extensionId);
+    this.config = new ExtensionConfig<C>(folder);
     this.db = new ExtensionDB(logger);
     this.paths = ProjectPath;
     this.Logger = logger;
