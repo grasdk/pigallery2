@@ -112,6 +112,11 @@ describe('MetadataLoader', () => {
       expect(Utils.clone(data)).to.be.deep.equal(expected);
     });
   });
+  it('should load wild-1-small image with CreateDate from 2015, but no DateTimeOriginal', async () => {
+    const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/wild-1-small.jpg'));
+    const expected = require(path.join(__dirname, '/../../../assets/wild-1-small.json'));
+    expect(Utils.clone(data)).to.be.deep.equal(expected);
+  });
 
   describe('should load jpg with edge case exif data', () => {
     const root = path.join(__dirname, '/../../../assets/edge_case_exif_data');
