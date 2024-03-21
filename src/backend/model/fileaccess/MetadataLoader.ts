@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import { imageSize } from 'image-size';
 import { Config } from '../../../common/config/private/Config';
-import { SideCar } from '../../../common/entities/MediaDTO';
 import { FaceRegion, PhotoMetadata } from '../../../common/entities/PhotoDTO';
 import { VideoMetadata } from '../../../common/entities/VideoDTO';
 import { Logger } from '../../Logger';
@@ -142,14 +141,14 @@ export class MetadataLoader {
 
         for (const sidecarPath of sidecarPaths) {
           if (fs.existsSync(sidecarPath)) {
-            const sidecarData = await exifr.sidecar(sidecarPath);
+            const sidecarData : any = await exifr.sidecar(sidecarPath);
             if (sidecarData !== undefined) {
-              if ((sidecarData as SideCar).dc !== undefined) {
-                if ((sidecarData as SideCar).dc.subject !== undefined) {
+              if (sidecarData.dc !== undefined) {
+                if (sidecarData.dc.subject !== undefined) {
                   if (metadata.keywords === undefined) {
                     metadata.keywords = [];
                   }
-                  let keywords = (sidecarData as SideCar).dc.subject || [];
+                  let keywords = sidecarData.dc.subject || [];
                   if (typeof keywords === 'string') {
                     keywords = [keywords];
                   }
@@ -161,9 +160,9 @@ export class MetadataLoader {
                 }
               }
               let hasPhotoshopDate = false;
-              if ((sidecarData as SideCar).photoshop !== undefined) {
-                if ((sidecarData as SideCar).photoshop.DateCreated !== undefined) {
-                  const date = Utils.timestampToMS((sidecarData as SideCar).photoshop.DateCreated, null);
+              if (sidecarData.photoshop !== undefined) {
+                if (sidecarData.photoshop.DateCreated !== undefined) {
+                  const date = Utils.timestampToMS(sidecarData.photoshop.DateCreated, null);
                   if (date) {
                     metadata.creationDate = date;
                     hasPhotoshopDate = true;
@@ -174,19 +173,19 @@ export class MetadataLoader {
                 (sidecarData as any)['xmp'] = (sidecarData as any)['xap'];
                 delete (sidecarData as any)['xap'];
               }
-              if ((sidecarData as SideCar).xmp !== undefined) {
-                if ((sidecarData as SideCar).xmp.Rating !== undefined) {
-                  metadata.rating = (sidecarData as SideCar).xmp.Rating;
+              if (sidecarData.xmp !== undefined) {
+                if (sidecarData.xmp.Rating !== undefined) {
+                  metadata.rating = sidecarData.xmp.Rating;
                 }
                 if (
                   !hasPhotoshopDate && (
-                    (sidecarData as SideCar).xmp.CreateDate !== undefined ||
-                    (sidecarData as SideCar).xmp.ModifyDate !== undefined
+                    sidecarData.xmp.CreateDate !== undefined ||
+                    sidecarData.xmp.ModifyDate !== undefined
                   )
                 ) {
                   metadata.creationDate =
-                    Utils.timestampToMS((sidecarData as SideCar).xmp.CreateDate, null) ||
-                    Utils.timestampToMS((sidecarData as SideCar).xmp.ModifyDate, null) ||
+                    Utils.timestampToMS(sidecarData.xmp.CreateDate, null) ||
+                    Utils.timestampToMS(sidecarData.xmp.ModifyDate, null) ||
                     metadata.creationDate;
                 }
               }
@@ -617,15 +616,15 @@ export class MetadataLoader {
 
           for (const sidecarPath of sidecarPaths) {
             if (fs.existsSync(sidecarPath)) {
-              const sidecarData = await exifr.sidecar(sidecarPath);
+              const sidecarData : any = await exifr.sidecar(sidecarPath);
 
               if (sidecarData !== undefined) {
-                if ((sidecarData as SideCar).dc !== undefined) {
-                  if ((sidecarData as SideCar).dc.subject !== undefined) {
+                if (sidecarData.dc !== undefined) {
+                  if (sidecarData.dc.subject !== undefined) {
                     if (metadata.keywords === undefined) {
                       metadata.keywords = [];
                     }
-                    let keywords = (sidecarData as SideCar).dc.subject || [];
+                    let keywords = sidecarData.dc.subject || [];
                     if (typeof keywords === 'string') {
                       keywords = [keywords];
                     }
@@ -637,9 +636,9 @@ export class MetadataLoader {
                   }
                 }
                 let hasPhotoshopDate = false;
-                if ((sidecarData as SideCar).photoshop !== undefined) {
-                  if ((sidecarData as SideCar).photoshop.DateCreated !== undefined) {
-                    const date = Utils.timestampToMS((sidecarData as SideCar).photoshop.DateCreated, null);
+                if (sidecarData.photoshop !== undefined) {
+                  if (sidecarData.photoshop.DateCreated !== undefined) {
+                    const date = Utils.timestampToMS(sidecarData.photoshop.DateCreated, null);
                     if (date) {
                       metadata.creationDate = date;
                       hasPhotoshopDate = true;
@@ -650,19 +649,19 @@ export class MetadataLoader {
                   (sidecarData as any)['xmp'] = (sidecarData as any)['xap'];
                   delete (sidecarData as any)['xap'];
                 }
-                if ((sidecarData as SideCar).xmp !== undefined) {
-                  if ((sidecarData as SideCar).xmp.Rating !== undefined) {
-                    metadata.rating = (sidecarData as SideCar).xmp.Rating;
+                if (sidecarData.xmp !== undefined) {
+                  if (sidecarData.xmp.Rating !== undefined) {
+                    metadata.rating = sidecarData.xmp.Rating;
                   }
                   if (
                     !hasPhotoshopDate && (
-                      (sidecarData as SideCar).xmp.CreateDate !== undefined ||
-                      (sidecarData as SideCar).xmp.ModifyDate !== undefined
+                      sidecarData.xmp.CreateDate !== undefined ||
+                      sidecarData.xmp.ModifyDate !== undefined
                     )
                   ) {
                     metadata.creationDate =
-                      Utils.timestampToMS((sidecarData as SideCar).xmp.CreateDate, null) ||
-                      Utils.timestampToMS((sidecarData as SideCar).xmp.ModifyDate, null) ||
+                      Utils.timestampToMS(sidecarData.xmp.CreateDate, null) ||
+                      Utils.timestampToMS(sidecarData.xmp.ModifyDate, null) ||
                       metadata.creationDate;
                   }
                 }
