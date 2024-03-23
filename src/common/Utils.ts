@@ -381,6 +381,14 @@ export class Utils {
     }
     return ret;
   }
+
+  public static xmpExifGpsCoordinateToDecimalDegrees(text: string): number {
+    const parts = text.match(/^([0-9]+),([0-9.]+)([EWNS])$/);
+    const degrees: number = parseInt(parts[1], 10);
+    const minutes: number = parseFloat(parts[2]);
+    const sign = (parts[3] === "N" || parts[3] === "E") ? 1 : -1;
+    return sign * (degrees + (minutes / 60.0))
+  }
 }
 
 export class LRU<V> {
