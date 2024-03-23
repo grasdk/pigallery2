@@ -361,19 +361,19 @@ export class MetadataLoader {
                       metadata.creationDate;
                   }
                 }
-                if ((sidecarData as SideCar).exif !== undefined) {
+                if (sidecarData.exif !== undefined) {
                   if (
-                    (sidecarData as SideCar).exif.GPSLatitude !== undefined &&
-                    (sidecarData as SideCar).exif.GPSLongitude !== undefined
+                    sidecarData.exif.GPSLatitude !== undefined &&
+                    sidecarData.exif.GPSLongitude !== undefined
                   ) {
                     metadata.positionData = metadata.positionData || {};
                     metadata.positionData.GPSData = {};
 
                     metadata.positionData.GPSData.longitude = Utils.xmpExifGpsCoordinateToDecimalDegrees(
-                      (sidecarData as SideCar).exif.GPSLongitude
+                      sidecarData.exif.GPSLongitude
                     );
                     metadata.positionData.GPSData.latitude = Utils.xmpExifGpsCoordinateToDecimalDegrees(
-                      (sidecarData as SideCar).exif.GPSLatitude
+                      sidecarData.exif.GPSLatitude
                     );
                   }
                 }

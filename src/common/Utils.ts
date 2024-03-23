@@ -387,7 +387,7 @@ export class Utils {
     const degrees: number = parseInt(parts[1], 10);
     const minutes: number = parseFloat(parts[2]);
     const sign = (parts[3] === "N" || parts[3] === "E") ? 1 : -1;
-    return sign * (degrees + (minutes / 60.0))
+    return (sign * (degrees + (minutes / 60.0)))
   }
 }
 
