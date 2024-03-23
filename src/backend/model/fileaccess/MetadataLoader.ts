@@ -312,289 +312,8 @@ export class MetadataLoader {
         }
 
         try {
-          let orientation = 1; //Orientation 1 is normal
           const exif = await exifr.parse(data, exifrOptions);
-          //exif is structured in sections, we read the data by section
-
-          //dc-section (subject is the only tag we want from dc)
-          if (exif.dc &&
-            exif.dc.subject &&
-            exif.dc.subject.length > 0) {
-            const subj = Array.isArray(exif.dc.subject) ? exif.dc.subject : [exif.dc.subject];
-            if (metadata.keywords === undefined) {
-              metadata.keywords = [];
-            }
-            for (const kw of subj) {
-              if (metadata.keywords.indexOf(kw) === -1) {
-                metadata.keywords.push(kw);
-              }
-            }
-          }
-
-          //ifd0 section
-          if (exif.ifd0) {
-            if (exif.ifd0.ImageWidth && metadata.size.width <= 0) {
-              metadata.size.width = exif.ifd0.ImageWidth;
-            }
-            if (exif.ifd0.ImageHeight && metadata.size.height <= 0) {
-              metadata.size.height = exif.ifd0.ImageHeight;
-            }
-            if (exif.ifd0.Orientation) {
-              orientation = parseInt(
-                exif.ifd0.Orientation as any,
-                10
-              ) as number;
-            }
-            if (exif.ifd0.Make && exif.ifd0.Make !== '') {
-              metadata.cameraData = metadata.cameraData || {};
-              metadata.cameraData.make = '' + exif.ifd0.Make;
-            }
-            if (exif.ifd0.Model && exif.ifd0.Model !== '') {
-              metadata.cameraData = metadata.cameraData || {};
-              metadata.cameraData.model = '' + exif.ifd0.Model;
-            }
-            //if (exif.ifd0.ModifyDate) {} //Deferred to the exif-section where the other timestamps are
-          }
-
-          //exif section starting with the date sectino
-          if (exif.exif) {
-            //Preceedence of dates: exif.DateTimeOriginal, exif.CreateDate, ifd0.ModifyDate, ihdr["Creation Time"], xmp.MetadataDate, file system date
-            //Filesystem is the absolute last resort, and it's hard to write tests for, since file system dates are changed on e.g. git clone.
-            if (exif.exif.DateTimeOriginal) {
-              //DateTimeOriginal is when the camera shutter closed
-              let offset = exif.exif.OffsetTimeOriginal; //OffsetTimeOriginal is the corresponding offset
-              if (!offset) { //Find offset among other options if possible
-                offset = exif.exif.OffsetTimeDigitized || exif.exif.OffsetTime || Utils.getTimeOffsetByGPSStamp(exif.exif.DateTimeOriginal, exif.exif.GPSTimeStamp, exif.gps);
-              }
-              metadata.creationDate = Utils.timestampToMS(exif.exif.DateTimeOriginal, offset);
-              metadata.creationDateOffset = offset;
-            } else if (exif.exif.CreateDate) { //using else if here, because DateTimeOriginal has preceedence
-              //Create is when the camera wrote the file (typically within the same ms as shutter close)
-              let offset = exif.exif.OffsetTimeDigitized; //OffsetTimeDigitized is the corresponding offset
-              if (!offset) { //Find offset among other options if possible
-                offset = exif.exif.OffsetTimeOriginal || exif.exif.OffsetTime || Utils.getTimeOffsetByGPSStamp(exif.exif.DateTimeOriginal, exif.exif.GPSTimeStamp, exif.gps);
-              }
-              metadata.creationDate = Utils.timestampToMS(exif.exif.CreateDate, offset);
-              metadata.creationDateOffset = offset;
-            } else if (exif.ifd0?.ModifyDate) { //using else if here, because DateTimeOriginal and CreatDate have preceedence
-              let offset = exif.exif.OffsetTime; //exif.Offsettime is the offset corresponding to ifd0.ModifyDate
-               if (!offset) { //Find offset among other options if possible
-                offset = exif.exif.DateTimeOriginal || exif.exif.OffsetTimeDigitized || Utils.getTimeOffsetByGPSStamp(exif.ifd0.ModifyDate, exif.exif.GPSTimeStamp, exif.gps);
-               }
-              metadata.creationDate = Utils.timestampToMS(exif.ifd0.ModifyDate, offset);
-              metadata.creationDateOffset = offset
-            } else if (exif.ihdr && exif.ihdr["Creation Time"]) {// again else if (another fallback date if the good ones aren't there) {
-                const any_offset = exif.exif.DateTimeOriginal || exif.exif.OffsetTimeDigitized || exif.exif.OffsetTime || Utils.getTimeOffsetByGPSStamp(exif.ifd0.ModifyDate, exif.exif.GPSTimeStamp, exif.gps);
-                metadata.creationDate = Utils.timestampToMS(exif.ihdr["Creation Time"], any_offset);
-                metadata.creationDateOffset = any_offset;
-            } else if (exif.xmp?.MetadataDate) {// again else if (another fallback date if the good ones aren't there - metadata date is probably later than actual creation date, but much better than file time) {
-                const any_offset = exif.exif.DateTimeOriginal || exif.exif.OffsetTimeDigitized || exif.exif.OffsetTime || Utils.getTimeOffsetByGPSStamp(exif.ifd0.ModifyDate, exif.exif.GPSTimeStamp, exif.gps);
-                metadata.creationDate = Utils.timestampToMS(exif.xmp.MetadataDate, any_offset);
-                metadata.creationDateOffset = any_offset;
-            }
-            if (exif.exif.LensModel && exif.exif.LensModel !== '') {
-              metadata.cameraData = metadata.cameraData || {};
-              metadata.cameraData.lens = '' + exif.exif.LensModel;
-            }
-            if (Utils.isUInt32(exif.exif.ISO)) {
-              metadata.cameraData = metadata.cameraData || {};
-              metadata.cameraData.ISO = parseInt('' + exif.exif.ISO, 10);
-            }
-            if (Utils.isFloat32(exif.exif.FocalLength)) {
-              metadata.cameraData = metadata.cameraData || {};
-              metadata.cameraData.focalLength = parseFloat(
-                '' + exif.exif.FocalLength
-              );
-            }
-            if (Utils.isFloat32(exif.exif.ExposureTime)) {
-              metadata.cameraData = metadata.cameraData || {};
-              metadata.cameraData.exposure = parseFloat(
-                parseFloat('' + exif.exif.ExposureTime).toFixed(6)
-              );
-            }
-            if (Utils.isFloat32(exif.exif.FNumber)) {
-              metadata.cameraData = metadata.cameraData || {};
-              metadata.cameraData.fStop = parseFloat(
-                parseFloat('' + exif.exif.FNumber).toFixed(2)
-              );
-            }
-            if (exif.exif.ExifImageWidth && metadata.size.width <= 0) {
-              metadata.size.width = exif.exif.ExifImageWidth;
-            }
-            if (exif.exif.ExifImageHeight && metadata.size.height <= 0) {
-              metadata.size.height = exif.exif.ExifImageHeight;
-            }
-          }
-
-          //gps section
-          if (exif.gps) {
-            metadata.positionData = metadata.positionData || {};
-            metadata.positionData.GPSData = metadata.positionData.GPSData || {};
-
-            if (Utils.isFloat32(exif.gps.longitude)) {
-              metadata.positionData.GPSData.longitude = parseFloat(
-                exif.gps.longitude.toFixed(6)
-              );
-            }
-            if (Utils.isFloat32(exif.gps.latitude)) {
-              metadata.positionData.GPSData.latitude = parseFloat(
-                exif.gps.latitude.toFixed(6)
-              );
-            }
-
-            if (metadata.positionData) {
-              if (!metadata.positionData.GPSData ||
-                Object.keys(metadata.positionData.GPSData).length === 0) {
-                metadata.positionData.GPSData = undefined;
-                metadata.positionData = undefined;
-              }
-            }
-          }
-          //photoshop section (sometimes has City, Country and State)
-          if (exif.photoshop) {
-            if (!metadata.positionData?.country && exif.photoshop.Country) {
-              metadata.positionData = metadata.positionData || {};
-              metadata.positionData.country = unescape(exif.photoshop.Country);
-            }
-            if (!metadata.positionData?.state && exif.photoshop.State) {
-              metadata.positionData = metadata.positionData || {};
-              metadata.positionData.state = unescape(exif.photoshop.State);
-            }
-            if (!metadata.positionData?.city && exif.photoshop.City) {
-              metadata.positionData = metadata.positionData || {};
-              metadata.positionData.city = unescape(exif.photoshop.City);
-            }
-          }
-
-          ///////////////////////////////////////
-          metadata.size.height = Math.max(metadata.size.height, 1); //ensure height dimension is positive
-          metadata.size.width  = Math.max(metadata.size.width,  1); //ensure width  dimension is positive
-
-          //Before moving on to the XMP section (particularly the regions (mwg-rs))
-          //we need to switch width and height for images that are rotated sideways
-          if (4 < orientation) { //Orientation is sideways (rotated 90% or 270%)
-            // noinspection JSSuspiciousNameCombination
-            const height = metadata.size.width;
-            // noinspection JSSuspiciousNameCombination
-            metadata.size.width = metadata.size.height;
-            metadata.size.height = height;
-          }
-          ///////////////////////////////////////
-
-          //xmp section
-          if (exif.xmp && exif.xmp.Rating) {
-            metadata.rating = exif.xmp.Rating;
-            if (metadata.rating < 0) {
-              metadata.rating = 0;
-            }
-          }
-          //xmp."mwg-rs" section
-          if (Config.Faces.enabled &&
-            exif["mwg-rs"] &&
-            exif["mwg-rs"].Regions) {
-            const faces: FaceRegion[] = [];
-            const regionListVal = Array.isArray(exif["mwg-rs"].Regions.RegionList) ? exif["mwg-rs"].Regions.RegionList : [exif["mwg-rs"].Regions.RegionList];
-            if (regionListVal) {
-              for (const regionRoot of regionListVal) {
-                let type;
-                let name;
-                let box;
-                const createFaceBox = (
-                  w: string,
-                  h: string,
-                  x: string,
-                  y: string
-                ) => {
-                  if (4 < orientation) { //roation is sidewards (90 or 270 degrees)
-                    [x, y] = [y, x];
-                    [w, h] = [h, w];
-                  }
-                  let swapX = 0;
-                  let swapY = 0;
-                  switch (orientation) {
-                    case 2: //TOP RIGHT (Mirror horizontal):
-                    case 6: //RIGHT TOP (Rotate 90 CW)
-                      swapX = 1;
-                      break;
-                    case 3: // BOTTOM RIGHT (Rotate 180)
-                    case 7: // RIGHT BOTTOM (Mirror horizontal and rotate 90 CW)
-                      swapX = 1;
-                      swapY = 1;
-                      break;
-                    case 4: //BOTTOM_LEFT (Mirror vertical)
-                    case 8: //LEFT_BOTTOM (Rotate 270 CW)
-                      swapY = 1;
-                      break;
-                  }
-                  // converting ratio to px
-                  return {
-                    width: Math.round(parseFloat(w) * metadata.size.width),
-                    height: Math.round(parseFloat(h) * metadata.size.height),
-                    left: Math.round(Math.abs(parseFloat(x) - swapX) * metadata.size.width),
-                    top: Math.round(Math.abs(parseFloat(y) - swapY) * metadata.size.height),
-                  };
-                };
-                /* Adobe Lightroom based face region structure */
-                if (
-                  regionRoot &&
-                  regionRoot['rdf:Description'] &&
-                  regionRoot['rdf:Description'] &&
-                  regionRoot['rdf:Description']['mwg-rs:Area']
-                ) {
-                  const region = regionRoot['rdf:Description'];
-                  const regionBox = region['mwg-rs:Area'].attributes;
-
-                  name = region['mwg-rs:Name'];
-                  type = region['mwg-rs:Type'];
-                  box = createFaceBox(
-                    regionBox['stArea:w'],
-                    regionBox['stArea:h'],
-                    regionBox['stArea:x'],
-                    regionBox['stArea:y']
-                  );
-                  /* Load exiftool edited face region structure, see github issue #191 */
-                } else if (
-                  regionRoot &&
-                  regionRoot.Name &&
-                  regionRoot.Type &&
-                  regionRoot.Area
-                ) {
-                  const regionBox = regionRoot.Area;
-                  name = regionRoot.Name;
-                  type = regionRoot.Type;
-                  box = createFaceBox(
-                    regionBox.w,
-                    regionBox.h,
-                    regionBox.x,
-                    regionBox.y
-                  );
-                }
-
-                if (type !== 'Face' || !name) {
-                  continue;
-                }
-
-                // convert center base box to corner based box
-                box.left = Math.round(Math.max(0, box.left - box.width / 2));
-                box.top = Math.round(Math.max(0, box.top - box.height / 2));
-
-
-                faces.push({ name, box });
-              }
-            }
-            if (faces.length > 0) {
-              metadata.faces = faces; // save faces
-              if (Config.Faces.keywordsToPersons) {
-                // remove faces from keywords
-                metadata.faces.forEach((f) => {
-                  const index = metadata.keywords.indexOf(f.name);
-                  if (index !== -1) {
-                    metadata.keywords.splice(index, 1);
-                  }
-                });
-              }
-            }
-          }
+          MetadataLoader.mapMetadata(metadata, exif);
         } catch (err) {
           // ignoring errors
         }
@@ -684,5 +403,298 @@ export class MetadataLoader {
       return MetadataLoader.EMPTY_METADATA;
     }
     return metadata;
+  }
+
+  private static mapMetadata(metadata: PhotoMetadata, exif: any) {
+
+    //Function to convert html code for special characters into their corresponding character (used in exif.photoshop-section)
+    const unescape = (tag: string) => {
+      return tag.replace(/&#([0-9]{1,3});/gi, function (match, numStr) {
+        return String.fromCharCode(parseInt(numStr, 10));
+      });
+    }
+
+    let orientation = 1; //Orientation 1 is normal
+
+    //the parsed data is structured in sections, we read the data by section
+    //dc-section (subject is the only tag we want from dc)
+    if (exif.dc &&
+      exif.dc.subject &&
+      exif.dc.subject.length > 0) {
+      const subj = Array.isArray(exif.dc.subject) ? exif.dc.subject : [exif.dc.subject];
+      if (metadata.keywords === undefined) {
+        metadata.keywords = [];
+      }
+      for (const kw of subj) {
+        if (metadata.keywords.indexOf(kw) === -1) {
+          metadata.keywords.push(kw);
+        }
+      }
+    }
+
+    //ifd0 section
+    if (exif.ifd0) {
+      if (exif.ifd0.ImageWidth && metadata.size.width <= 0) {
+        metadata.size.width = exif.ifd0.ImageWidth;
+      }
+      if (exif.ifd0.ImageHeight && metadata.size.height <= 0) {
+        metadata.size.height = exif.ifd0.ImageHeight;
+      }
+      if (exif.ifd0.Orientation) {
+        orientation = parseInt(
+          exif.ifd0.Orientation as any,
+          10
+        ) as number;
+      }
+      if (exif.ifd0.Make && exif.ifd0.Make !== '') {
+        metadata.cameraData = metadata.cameraData || {};
+        metadata.cameraData.make = '' + exif.ifd0.Make;
+      }
+      if (exif.ifd0.Model && exif.ifd0.Model !== '') {
+        metadata.cameraData = metadata.cameraData || {};
+        metadata.cameraData.model = '' + exif.ifd0.Model;
+      }
+      //if (exif.ifd0.ModifyDate) {} //Deferred to the exif-section where the other timestamps are
+    }
+
+    //exif section starting with the date sectino
+    if (exif.exif) {
+      //Preceedence of dates: exif.DateTimeOriginal, exif.CreateDate, ifd0.ModifyDate, ihdr["Creation Time"], xmp.MetadataDate, file system date
+      //Filesystem is the absolute last resort, and it's hard to write tests for, since file system dates are changed on e.g. git clone.
+      if (exif.exif.DateTimeOriginal) {
+        //DateTimeOriginal is when the camera shutter closed
+        let offset = exif.exif.OffsetTimeOriginal; //OffsetTimeOriginal is the corresponding offset
+        if (!offset) { //Find offset among other options if possible
+          offset = exif.exif.OffsetTimeDigitized || exif.exif.OffsetTime || Utils.getTimeOffsetByGPSStamp(exif.exif.DateTimeOriginal, exif.exif.GPSTimeStamp, exif.gps);
+        }
+        metadata.creationDate = Utils.timestampToMS(exif.exif.DateTimeOriginal, offset);
+        metadata.creationDateOffset = offset;
+      } else if (exif.exif.CreateDate) { //using else if here, because DateTimeOriginal has preceedence
+        //Create is when the camera wrote the file (typically within the same ms as shutter close)
+        let offset = exif.exif.OffsetTimeDigitized; //OffsetTimeDigitized is the corresponding offset
+        if (!offset) { //Find offset among other options if possible
+          offset = exif.exif.OffsetTimeOriginal || exif.exif.OffsetTime || Utils.getTimeOffsetByGPSStamp(exif.exif.DateTimeOriginal, exif.exif.GPSTimeStamp, exif.gps);
+        }
+        metadata.creationDate = Utils.timestampToMS(exif.exif.CreateDate, offset);
+        metadata.creationDateOffset = offset;
+      } else if (exif.ifd0?.ModifyDate) { //using else if here, because DateTimeOriginal and CreatDate have preceedence
+        let offset = exif.exif.OffsetTime; //exif.Offsettime is the offset corresponding to ifd0.ModifyDate
+        if (!offset) { //Find offset among other options if possible
+          offset = exif.exif.DateTimeOriginal || exif.exif.OffsetTimeDigitized || Utils.getTimeOffsetByGPSStamp(exif.ifd0.ModifyDate, exif.exif.GPSTimeStamp, exif.gps);
+        }
+        metadata.creationDate = Utils.timestampToMS(exif.ifd0.ModifyDate, offset);
+        metadata.creationDateOffset = offset
+      } else if (exif.ihdr && exif.ihdr["Creation Time"]) {// again else if (another fallback date if the good ones aren't there) {
+        const any_offset = exif.exif.DateTimeOriginal || exif.exif.OffsetTimeDigitized || exif.exif.OffsetTime || Utils.getTimeOffsetByGPSStamp(exif.ifd0.ModifyDate, exif.exif.GPSTimeStamp, exif.gps);
+        metadata.creationDate = Utils.timestampToMS(exif.ihdr["Creation Time"], any_offset);
+        metadata.creationDateOffset = any_offset;
+      } else if (exif.xmp?.MetadataDate) {// again else if (another fallback date if the good ones aren't there - metadata date is probably later than actual creation date, but much better than file time) {
+        const any_offset = exif.exif.DateTimeOriginal || exif.exif.OffsetTimeDigitized || exif.exif.OffsetTime || Utils.getTimeOffsetByGPSStamp(exif.ifd0.ModifyDate, exif.exif.GPSTimeStamp, exif.gps);
+        metadata.creationDate = Utils.timestampToMS(exif.xmp.MetadataDate, any_offset);
+        metadata.creationDateOffset = any_offset;
+      }
+      if (exif.exif.LensModel && exif.exif.LensModel !== '') {
+        metadata.cameraData = metadata.cameraData || {};
+        metadata.cameraData.lens = '' + exif.exif.LensModel;
+      }
+      if (Utils.isUInt32(exif.exif.ISO)) {
+        metadata.cameraData = metadata.cameraData || {};
+        metadata.cameraData.ISO = parseInt('' + exif.exif.ISO, 10);
+      }
+      if (Utils.isFloat32(exif.exif.FocalLength)) {
+        metadata.cameraData = metadata.cameraData || {};
+        metadata.cameraData.focalLength = parseFloat(
+          '' + exif.exif.FocalLength
+        );
+      }
+      if (Utils.isFloat32(exif.exif.ExposureTime)) {
+        metadata.cameraData = metadata.cameraData || {};
+        metadata.cameraData.exposure = parseFloat(
+          parseFloat('' + exif.exif.ExposureTime).toFixed(6)
+        );
+      }
+      if (Utils.isFloat32(exif.exif.FNumber)) {
+        metadata.cameraData = metadata.cameraData || {};
+        metadata.cameraData.fStop = parseFloat(
+          parseFloat('' + exif.exif.FNumber).toFixed(2)
+        );
+      }
+      if (exif.exif.ExifImageWidth && metadata.size.width <= 0) {
+        metadata.size.width = exif.exif.ExifImageWidth;
+      }
+      if (exif.exif.ExifImageHeight && metadata.size.height <= 0) {
+        metadata.size.height = exif.exif.ExifImageHeight;
+      }
+    }
+
+    //gps section
+    if (exif.gps) {
+      metadata.positionData = metadata.positionData || {};
+      metadata.positionData.GPSData = metadata.positionData.GPSData || {};
+
+      if (Utils.isFloat32(exif.gps.longitude)) {
+        metadata.positionData.GPSData.longitude = parseFloat(
+          exif.gps.longitude.toFixed(6)
+        );
+      }
+      if (Utils.isFloat32(exif.gps.latitude)) {
+        metadata.positionData.GPSData.latitude = parseFloat(
+          exif.gps.latitude.toFixed(6)
+        );
+      }
+
+      if (metadata.positionData) {
+        if (!metadata.positionData.GPSData ||
+          Object.keys(metadata.positionData.GPSData).length === 0) {
+          metadata.positionData.GPSData = undefined;
+          metadata.positionData = undefined;
+        }
+      }
+    }
+    //photoshop section (sometimes has City, Country and State)
+    if (exif.photoshop) {
+      if (!metadata.positionData?.country && exif.photoshop.Country) {
+        metadata.positionData = metadata.positionData || {};
+        metadata.positionData.country = unescape(exif.photoshop.Country);
+      }
+      if (!metadata.positionData?.state && exif.photoshop.State) {
+        metadata.positionData = metadata.positionData || {};
+        metadata.positionData.state = unescape(exif.photoshop.State);
+      }
+      if (!metadata.positionData?.city && exif.photoshop.City) {
+        metadata.positionData = metadata.positionData || {};
+        metadata.positionData.city = unescape(exif.photoshop.City);
+      }
+    }
+
+    ///////////////////////////////////////
+    metadata.size.height = Math.max(metadata.size.height, 1); //ensure height dimension is positive
+    metadata.size.width = Math.max(metadata.size.width, 1); //ensure width  dimension is positive
+
+    //Before moving on to the XMP section (particularly the regions (mwg-rs))
+    //we need to switch width and height for images that are rotated sideways
+    if (4 < orientation) { //Orientation is sideways (rotated 90% or 270%)
+      // noinspection JSSuspiciousNameCombination
+      const height = metadata.size.width;
+      // noinspection JSSuspiciousNameCombination
+      metadata.size.width = metadata.size.height;
+      metadata.size.height = height;
+    }
+    ///////////////////////////////////////
+
+    //xmp section
+    if (exif.xmp && exif.xmp.Rating) {
+      metadata.rating = exif.xmp.Rating;
+      if (metadata.rating < 0) {
+        metadata.rating = 0;
+      }
+    }
+    //xmp."mwg-rs" section
+    if (Config.Faces.enabled &&
+      exif["mwg-rs"] &&
+      exif["mwg-rs"].Regions) {
+      const faces: FaceRegion[] = [];
+      const regionListVal = Array.isArray(exif["mwg-rs"].Regions.RegionList) ? exif["mwg-rs"].Regions.RegionList : [exif["mwg-rs"].Regions.RegionList];
+      if (regionListVal) {
+        for (const regionRoot of regionListVal) {
+          let type;
+          let name;
+          let box;
+          const createFaceBox = (
+            w: string,
+            h: string,
+            x: string,
+            y: string
+          ) => {
+            if (4 < orientation) { //roation is sidewards (90 or 270 degrees)
+              [x, y] = [y, x];
+              [w, h] = [h, w];
+            }
+            let swapX = 0;
+            let swapY = 0;
+            switch (orientation) {
+              case 2: //TOP RIGHT (Mirror horizontal):
+              case 6: //RIGHT TOP (Rotate 90 CW)
+                swapX = 1;
+                break;
+              case 3: // BOTTOM RIGHT (Rotate 180)
+              case 7: // RIGHT BOTTOM (Mirror horizontal and rotate 90 CW)
+                swapX = 1;
+                swapY = 1;
+                break;
+              case 4: //BOTTOM_LEFT (Mirror vertical)
+              case 8: //LEFT_BOTTOM (Rotate 270 CW)
+                swapY = 1;
+                break;
+            }
+            // converting ratio to px
+            return {
+              width: Math.round(parseFloat(w) * metadata.size.width),
+              height: Math.round(parseFloat(h) * metadata.size.height),
+              left: Math.round(Math.abs(parseFloat(x) - swapX) * metadata.size.width),
+              top: Math.round(Math.abs(parseFloat(y) - swapY) * metadata.size.height),
+            };
+          };
+          /* Adobe Lightroom based face region structure */
+          if (
+            regionRoot &&
+            regionRoot['rdf:Description'] &&
+            regionRoot['rdf:Description'] &&
+            regionRoot['rdf:Description']['mwg-rs:Area']
+          ) {
+            const region = regionRoot['rdf:Description'];
+            const regionBox = region['mwg-rs:Area'].attributes;
+
+            name = region['mwg-rs:Name'];
+            type = region['mwg-rs:Type'];
+            box = createFaceBox(
+              regionBox['stArea:w'],
+              regionBox['stArea:h'],
+              regionBox['stArea:x'],
+              regionBox['stArea:y']
+            );
+            /* Load exiftool edited face region structure, see github issue #191 */
+          } else if (
+            regionRoot &&
+            regionRoot.Name &&
+            regionRoot.Type &&
+            regionRoot.Area
+          ) {
+            const regionBox = regionRoot.Area;
+            name = regionRoot.Name;
+            type = regionRoot.Type;
+            box = createFaceBox(
+              regionBox.w,
+              regionBox.h,
+              regionBox.x,
+              regionBox.y
+            );
+          }
+
+          if (type !== 'Face' || !name) {
+            continue;
+          }
+
+          // convert center base box to corner based box
+          box.left = Math.round(Math.max(0, box.left - box.width / 2));
+          box.top = Math.round(Math.max(0, box.top - box.height / 2));
+
+
+          faces.push({ name, box });
+        }
+      }
+      if (faces.length > 0) {
+        metadata.faces = faces; // save faces
+        if (Config.Faces.keywordsToPersons) {
+          // remove faces from keywords
+          metadata.faces.forEach((f) => {
+            const index = metadata.keywords.indexOf(f.name);
+            if (index !== -1) {
+              metadata.keywords.splice(index, 1);
+            }
+          });
+        }
+      }
+    }
   }
 }
