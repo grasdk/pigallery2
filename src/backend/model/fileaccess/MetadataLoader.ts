@@ -335,25 +335,9 @@ export class MetadataLoader {
 
           for (const sidecarPath of sidecarPaths) {
             if (fs.existsSync(sidecarPath)) {
-              const sidecarData : any = await exifr.sidecar(sidecarPath);
-
+              const sidecarData : any = await exifr.sidecar(sidecarPath, exifrOptions);
               if (sidecarData !== undefined) {
-                if (sidecarData.dc !== undefined) {
-                  if (sidecarData.dc.subject !== undefined) {
-                    if (metadata.keywords === undefined) {
-                      metadata.keywords = [];
-                    }
-                    let keywords = sidecarData.dc.subject || [];
-                    if (typeof keywords === 'string') {
-                      keywords = [keywords];
-                    }
-                    for (const kw of keywords) {
-                      if (metadata.keywords.indexOf(kw) === -1) {
-                        metadata.keywords.push(kw);
-                      }
-                    }
-                  }
-                }
+                MetadataLoader.mapMetadata(metadata, sidecarData);
                 let hasPhotoshopDate = false;
                 if (sidecarData.photoshop !== undefined) {
                   if (sidecarData.photoshop.DateCreated !== undefined) {
@@ -364,14 +348,7 @@ export class MetadataLoader {
                     }
                   }
                 }
-                if (Object.hasOwn(sidecarData, 'xap')) {
-                  (sidecarData as any)['xmp'] = (sidecarData as any)['xap'];
-                  delete (sidecarData as any)['xap'];
-                }
                 if (sidecarData.xmp !== undefined) {
-                  if (sidecarData.xmp.Rating !== undefined) {
-                    metadata.rating = sidecarData.xmp.Rating;
-                  }
                   if (
                     !hasPhotoshopDate && (
                       sidecarData.xmp.CreateDate !== undefined ||
@@ -440,7 +417,7 @@ export class MetadataLoader {
       if (exif.ifd0.ImageHeight && metadata.size.height <= 0) {
         metadata.size.height = exif.ifd0.ImageHeight;
       }
-      if (exif.ifd0.Orientation) {
+      if (exif.ifd0.Orientation != undefined) {
         orientation = parseInt(
           exif.ifd0.Orientation as any,
           10
@@ -582,8 +559,14 @@ export class MetadataLoader {
     }
     ///////////////////////////////////////
 
+    //replace adobe xap-section with xmp to reuse parsing
+    if (Object.hasOwn(exif, 'xap')) {
+      exif['xmp'] = exif['xap'];
+      delete exif['xap'];
+    }
+    
     //xmp section
-    if (exif.xmp && exif.xmp.Rating) {
+    if (exif.xmp && exif.xmp.Rating != undefined) {
       metadata.rating = exif.xmp.Rating;
       if (metadata.rating < 0) {
         metadata.rating = 0;
