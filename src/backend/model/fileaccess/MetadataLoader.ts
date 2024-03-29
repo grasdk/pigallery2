@@ -174,10 +174,8 @@ export class MetadataLoader {
                 delete (sidecarData as any)['xap'];
               }
               if (sidecarData.xmp !== undefined) {
-                if (
-                    sidecarData.xmp.Rating !== undefined &&
-                    sidecarData.xmp.Rating > 0
-                ) {
+                if (sidecarData.xmp.Rating !== undefined &&
+                    sidecarData.xmp.Rating > 0) {
                   metadata.rating = sidecarData.xmp.Rating;
                 }
                 if (
@@ -371,6 +369,7 @@ export class MetadataLoader {
                   ) {
                     metadata.positionData = metadata.positionData || {};
                     metadata.positionData.GPSData = {};
+
                     metadata.positionData.GPSData.longitude = Utils.xmpExifGpsCoordinateToDecimalDegrees(
                       sidecarData.exif.GPSLongitude
                     );
@@ -584,11 +583,10 @@ export class MetadataLoader {
     }
     
     //xmp section
-    if (exif.xmp && exif.xmp.Rating != undefined) {
+    if (exif.xmp && 
+        exif.xmp.Rating !== undefined &&
+        exif.xmp.Rating > 0) {
       metadata.rating = exif.xmp.Rating;
-      if (metadata.rating < 0) {
-        metadata.rating = 0;
-      }
     }
     //xmp."mwg-rs" section
     if (Config.Faces.enabled &&
@@ -681,126 +679,21 @@ export class MetadataLoader {
           box.top = Math.round(Math.max(0, box.top - box.height / 2));
 
 
-                faces.push({ name, box });
-              }
-            }
-            if (faces.length > 0) {
-              metadata.faces = faces; // save faces
-              if (Config.Faces.keywordsToPersons) {
-                // remove faces from keywords
-                metadata.faces.forEach((f) => {
-                  const index = metadata.keywords.indexOf(f.name);
-                  if (index !== -1) {
-                    metadata.keywords.splice(index, 1);
-                  }
-                });
-              }
-            }
-          }
-        } catch (err) {
-          // ignoring errors
+          faces.push({ name, box });
         }
-
-        if (!metadata.creationDate) {
-          // creationDate can be negative, when it was created before epoch (1970)
-          metadata.creationDate = 0;
-        }
-
-        try {
-          // search for sidecar and merge metadata
-          const fullPathWithoutExt = path.join(path.parse(fullPath).dir, path.parse(fullPath).name);
-          const sidecarPaths = [
-            fullPath + '.xmp',
-            fullPath + '.XMP',
-            fullPathWithoutExt + '.xmp',
-            fullPathWithoutExt + '.XMP',
-          ];
-
-          for (const sidecarPath of sidecarPaths) {
-            if (fs.existsSync(sidecarPath)) {
-              const sidecarData = await exifr.sidecar(sidecarPath);
-
-              if (sidecarData !== undefined) {
-                if ((sidecarData as SideCar).dc !== undefined) {
-                  if ((sidecarData as SideCar).dc.subject !== undefined) {
-                    if (metadata.keywords === undefined) {
-                      metadata.keywords = [];
-                    }
-                    let keywords = (sidecarData as SideCar).dc.subject || [];
-                    if (typeof keywords === 'string') {
-                      keywords = [keywords];
-                    }
-                    for (const kw of keywords) {
-                      if (metadata.keywords.indexOf(kw) === -1) {
-                        metadata.keywords.push(kw);
-                      }
-                    }
-                  }
-                }
-                let hasPhotoshopDate = false;
-                if ((sidecarData as SideCar).photoshop !== undefined) {
-                  if ((sidecarData as SideCar).photoshop.DateCreated !== undefined) {
-                    const date = Utils.timestampToMS((sidecarData as SideCar).photoshop.DateCreated, null);
-                    if (date) {
-                      metadata.creationDate = date;
-                      hasPhotoshopDate = true;
-                    }
-                  }
-                }
-                if (Object.hasOwn(sidecarData, 'xap')) {
-                  (sidecarData as any)['xmp'] = (sidecarData as any)['xap'];
-                  delete (sidecarData as any)['xap'];
-                }
-                if ((sidecarData as SideCar).xmp !== undefined) {
-                  if ((sidecarData as SideCar).xmp.Rating !== undefined) {
-                    metadata.rating = (sidecarData as SideCar).xmp.Rating;
-                  }
-                  if (
-                    !hasPhotoshopDate && (
-                      (sidecarData as SideCar).xmp.CreateDate !== undefined ||
-                      (sidecarData as SideCar).xmp.ModifyDate !== undefined
-                    )
-                  ) {
-                    metadata.creationDate =
-                      Utils.timestampToMS((sidecarData as SideCar).xmp.CreateDate, null) ||
-                      Utils.timestampToMS((sidecarData as SideCar).xmp.ModifyDate, null) ||
-                      metadata.creationDate;
-                  }
-                }
-                if ((sidecarData as SideCar).exif !== undefined) {
-                  if (
-                    (sidecarData as SideCar).exif.GPSLatitude !== undefined &&
-                    (sidecarData as SideCar).exif.GPSLongitude !== undefined
-                  ) {
-                    metadata.positionData = metadata.positionData || {};
-                    metadata.positionData.GPSData = {};
-
-                    metadata.positionData.GPSData.longitude = Utils.xmpExifGpsCoordinateToDecimalDegrees(
-                      (sidecarData as SideCar).exif.GPSLongitude
-                    );
-                    metadata.positionData.GPSData.latitude = Utils.xmpExifGpsCoordinateToDecimalDegrees(
-                      (sidecarData as SideCar).exif.GPSLatitude
-                    );
-                  }
-                }
-              }
-            }
-          }
-        } catch (err) {
-          Logger.silly(LOG_TAG, 'Error loading sidecar metadata for : ' + fullPath);
-          Logger.silly(err);
-        }
-
-      } catch (err) {
-        Logger.error(LOG_TAG, 'Error during reading photo: ' + fullPath);
-        console.error(err);
-        return MetadataLoader.EMPTY_METADATA;
       }
-    } catch (err) {
-      Logger.error(LOG_TAG, 'Error during reading photo: ' + fullPath);
-      console.error(err);
-      return MetadataLoader.EMPTY_METADATA;
+      if (faces.length > 0) {
+        metadata.faces = faces; // save faces
+        if (Config.Faces.keywordsToPersons) {
+          // remove faces from keywords
+          metadata.faces.forEach((f) => {
+            const index = metadata.keywords.indexOf(f.name);
+            if (index !== -1) {
+              metadata.keywords.splice(index, 1);
+            }
+          });
+        }
+      }
     }
-    return metadata;
   }
 }
