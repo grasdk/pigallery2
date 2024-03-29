@@ -174,8 +174,7 @@ export class MetadataLoader {
                 delete (sidecarData as any)['xap'];
               }
               if (sidecarData.xmp !== undefined) {
-                if (sidecarData.xmp.Rating !== undefined &&
-                    sidecarData.xmp.Rating > 0) {
+                if (sidecarData.xmp.Rating !== undefined) {
                   metadata.rating = sidecarData.xmp.Rating;
                 }
                 if (
@@ -202,6 +201,7 @@ export class MetadataLoader {
       Logger.silly(LOG_TAG, 'Error loading metadata for : ' + fullPath);
       Logger.silly(err);
     }
+
     return metadata;
   }
 
@@ -581,11 +581,9 @@ export class MetadataLoader {
       exif['xmp'] = exif['xap'];
       delete exif['xap'];
     }
-    
     //xmp section
     if (exif.xmp && 
-        exif.xmp.Rating !== undefined &&
-        exif.xmp.Rating > 0) {
+        exif.xmp.Rating !== undefined) {
       metadata.rating = exif.xmp.Rating;
     }
     //xmp."mwg-rs" section
