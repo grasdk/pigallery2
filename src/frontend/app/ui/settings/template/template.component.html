@@ -107,7 +107,7 @@
             [ngModel]="rStates?.value.__state[ck]">
           </app-settings-entry>
           <!-- Config entries --->
-          <ng-container *ngIf="isExpandableConfig(rStates.value.__state[ck])">
+          <ng-container *ngIf="isExpandableConfig(rStates.value.__state[ck]) && rStates.value.__state[ck].value">
             <!-- Sub category with header and menu item -->
             <div class="card mt-2 mb-2" *ngIf="topLevel && rStates?.value.__state[ck].tags?.uiIcon"
                  [id]="ConfigPath+'.'+ck">

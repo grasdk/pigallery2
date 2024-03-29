@@ -1,12 +1,12 @@
 import {IExtensionEvents, IExtensionObject} from './IExtension';
 import {ExtensionApp} from './ExtensionApp';
-import {ExtensionConfig} from './ExtensionConfigWrapper';
 import {ExtensionDB} from './ExtensionDB';
 import {ProjectPath} from '../../ProjectPath';
 import {ExpressRouterWrapper} from './ExpressRouterWrapper';
 import {createLoggerWrapper} from '../../Logger';
 import * as express from 'express';
 import {ExtensionMessengerHandler} from './ExtensionMessengerHandler';
+import {ExtensionConfig} from './ExtensionConfig';
 
 export class ExtensionObject<C> implements IExtensionObject<C> {
 

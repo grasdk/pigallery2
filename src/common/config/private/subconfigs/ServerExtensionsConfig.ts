@@ -2,6 +2,7 @@
 import {ConfigProperty, SubConfigClass} from 'typeconfig/common';
 import {ClientExtensionsConfig, ConfigPriority, TAGS} from '../../public/ClientConfig';
 import {GenericConfigType} from 'typeconfig/src/GenericConfigType';
+
 declare let $localize: (s: TemplateStringsArray) => string;
 
 if (typeof $localize === 'undefined') {

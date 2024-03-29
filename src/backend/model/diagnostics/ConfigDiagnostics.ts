@@ -1,4 +1,4 @@
-import {Config, PrivateConfigClass} from '../../../common/config/private/Config';
+import {PrivateConfigClass} from '../../../common/config/private/PrivateConfigClass';
 import {Logger} from '../../Logger';
 import {NotificationManager} from '../NotifocationManager';
 import {SQLConnection} from '../database/SQLConnection';
@@ -27,8 +27,8 @@ import {SearchQueryParser} from '../../../common/SearchQueryParser';
 import {SearchQueryTypes, TextSearch,} from '../../../common/entities/SearchQueryDTO';
 import {Utils} from '../../../common/Utils';
 import {JobRepository} from '../jobs/JobRepository';
-import {ExtensionConfig} from '../extension/ExtensionConfigWrapper';
 import {ConfigClassBuilder} from '../../../../node_modules/typeconfig/node';
+import { Config } from '../../../common/config/private/Config';
 
 const LOG_TAG = '[ConfigDiagnostics]';
 

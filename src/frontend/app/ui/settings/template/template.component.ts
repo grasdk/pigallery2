@@ -220,12 +220,12 @@ export class TemplateComponent implements OnInit, OnChanges, OnDestroy, ISetting
         st.original = Utils.clone(st.value);
       }
 
-      if (st.isConfigType) {
+      if (st.isConfigType && st.value) {
         for (const k of Object.keys(st.value.__state)) {
           instrument(st.value.__state[k], st);
         }
       }
-      if (st.isConfigArrayType) {
+      if (st.isConfigArrayType && st.value) {
         for (let i = 0; i < st.value?.length; ++i) {
           for (const k of Object.keys(st.value[i].__state)) {
             instrument(st.value[i].__state[k], st);
@@ -316,6 +316,9 @@ export class TemplateComponent implements OnInit, OnChanges, OnDestroy, ISetting
   getKeys(states: any): string[] {
     if (states.keys) {
       return states.keys;
+    }
+    if (!states.value) {
+      return [];
     }
     const s = states.value.__state;
     const keys = Object.keys(s).sort((a, b) => {

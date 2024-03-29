@@ -12,7 +12,6 @@ import {SQLConnection} from '../database/SQLConnection';
 import {ExtensionObject} from './ExtensionObject';
 import {ExtensionDecoratorObject} from './ExtensionDecorator';
 import * as util from 'util';
-import {ServerExtensionsEntryConfig} from '../../../common/config/private/subconfigs/ServerExtensionsConfig';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const exec = util.promisify(require('child_process').exec);
 
@@ -37,7 +36,7 @@ export class ExtensionManager implements IObjectManager {
       return;
     }
     this.router = express.Router();
-    Server.getInstance().app.use(ExtensionManager.EXTENSION_API_PATH, this.router);
+    Server.instance?.app.use(ExtensionManager.EXTENSION_API_PATH, this.router);
     this.loadExtensionsList();
     await this.initExtensions();
   }
@@ -80,15 +79,8 @@ export class ExtensionManager implements IObjectManager {
       );
     extList.sort();
 
-    // delete not existing extensions
-    Config.Extensions.extensions = Config.Extensions.extensions.filter(ec => extList.indexOf(ec.path) !== -1);
 
-    // Add new extensions
-    const ePaths = Config.Extensions.extensions.map(ec => ec.path);
-    extList.filter(ep => ePaths.indexOf(ep) === -1).forEach(ep =>
-      Config.Extensions.extensions.push(new ServerExtensionsEntryConfig(ep)));
-
-    Logger.debug(LOG_TAG, 'Extensions found ', JSON.stringify(Config.Extensions.extensions.map(ec => ec.path)));
+    Logger.debug(LOG_TAG, 'Extensions found: ', JSON.stringify(Config.Extensions.extensions.map(ec => ec.path)));
   }
 
   private createUniqueExtensionObject(name: string, folder: string): IExtensionObject<unknown> {
@@ -111,7 +103,7 @@ export class ExtensionManager implements IObjectManager {
       const extFolder = Config.Extensions.extensions[i].path;
       let extName = extFolder;
 
-      if(Config.Extensions.extensions[i].enabled === false){
+      if (Config.Extensions.extensions[i].enabled === false) {
         Logger.silly(LOG_TAG, `Skipping ${extFolder} initiation. Extension is disabled.`);
       }
       const extPath = path.join(ProjectPath.ExtensionFolder, extFolder);
@@ -171,7 +163,7 @@ export class ExtensionManager implements IObjectManager {
     }
     this.initEvents(); // reset events
     await this.cleanUpExtensions();
-    Server.getInstance().app.use(ExtensionManager.EXTENSION_API_PATH, express.Router());
+    Server.instance?.app.use(ExtensionManager.EXTENSION_API_PATH, this.router);
     this.extObjects = {};
   }
 }

@@ -51,8 +51,8 @@ export class SettingsMWs {
       await ConfigDiagnostics.runDiagnostics();
       // restart all schedule timers. In case they have changed
       ObjectManagers.getInstance().JobManager.runSchedules();
-      Logger.info(LOG_TAG, 'new config:');
-      Logger.info(LOG_TAG, JSON.stringify(Config.toJSON({attachDescription: false}), null, '\t'));
+    //  Logger.info(LOG_TAG, 'new config:');
+    //  Logger.info(LOG_TAG, JSON.stringify(Config.toJSON({attachDescription: false}), null, '\t'));
       return next();
     } catch (err) {
       if (err instanceof Error) {

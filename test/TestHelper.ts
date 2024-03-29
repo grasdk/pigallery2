@@ -20,10 +20,13 @@ import {
 import {DirectoryBaseDTO, DirectoryPathDTO} from '../src/common/entities/DirectoryDTO';
 import {FileDTO} from '../src/common/entities/FileDTO';
 import {DiskManager} from '../src/backend/model/fileaccess/DiskManager';
+import * as path from 'path';
 
 export class TestHelper {
 
   static creationCounter = 0;
+
+  public static readonly TMP_DIR= path.join(__dirname, './tmp');
 
   public static getDirectoryEntry(parent: DirectoryBaseDTO = null, name = 'wars dir'): DirectoryEntity {
 

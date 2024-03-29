@@ -1,65 +1,49 @@
 import {IConfigClass} from 'typeconfig/common';
-import {Config, PrivateConfigClass} from '../../../common/config/private/Config';
+import {PrivateConfigClass} from '../../../common/config/private/PrivateConfigClass';
 import {ConfigClassBuilder} from 'typeconfig/node';
-import {IExtensionConfig} from './IExtension';
-import {ObjectManagers} from '../ObjectManagers';
-import {ServerExtensionsEntryConfig} from '../../../common/config/private/subconfigs/ServerExtensionsConfig';
+import {ExtensionConfigTemplateLoader} from './ExtensionConfigTemplateLoader';
+import {NotificationManager} from '../NotifocationManager';
+
+
+const LOG_TAG = '[ExtensionConfigWrapper]';
 
 /**
  * Wraps to original config and makes sure all extension related config is loaded
  */
 export class ExtensionConfigWrapper {
-  static async original(): Promise<PrivateConfigClass & IConfigClass> {
+
+  static async original(showDetailedError = false): Promise<PrivateConfigClass & IConfigClass> {
     const pc = ConfigClassBuilder.attachPrivateInterface(new PrivateConfigClass());
+    ExtensionConfigTemplateLoader.Instance.loadExtensionTemplates(pc);
     try {
-      await pc.load(); // loading the basic configs but we do not know the extension config hierarchy yet
-      if (ObjectManagers.isReady()) {
-        for (const ext of Object.values(ObjectManagers.getInstance().ExtensionManager.extObjects)) {
-          ext.config.loadToConfig(ConfigClassBuilder.attachPrivateInterface(pc));
-        }
-      }
-      await pc.load(); // loading the extension related configs
+      await pc.load(); // loading the basic configs, but we do not know the extension config hierarchy yet
+
     } catch (e) {
-      console.error('Error during loading original config. Reverting to defaults.');
+      console.error(LOG_TAG, 'Error during loading config. Reverting to defaults.');
       console.error(e);
+      if (showDetailedError) {
+        console.error(LOG_TAG, 'This is most likely due to: 1) you added a bad configuration in the server.json OR 2) The configuration changed in the latest release.');
+        NotificationManager.error('Can\'t load config. Reverting to default. This is most likely due to: 1) you added a bad configuration in the server.json OR 2) The configuration changed in the latest release.', (e.toString ? e.toString() : JSON.stringify(e)));
+      }
     }
     return pc;
   }
-}
 
-export class ExtensionConfig<C> implements IExtensionConfig<C> {
-  public template: new() => C;
 
-  constructor(private readonly extensionFolder: string) {
-  }
+  static originalSync(showDetailedError = false): PrivateConfigClass & IConfigClass {
+    const pc = ConfigClassBuilder.attachPrivateInterface(new PrivateConfigClass());
+    ExtensionConfigTemplateLoader.Instance.loadExtensionTemplates(pc);
+    try {
+      pc.loadSync(); // loading the basic configs, but we do not know the extension config hierarchy yet
 
-  private findConfig(config: PrivateConfigClass): ServerExtensionsEntryConfig {
-      let c = (config.Extensions.extensions || []).find(e => e.path === this.extensionFolder);
-      if (!c) {
-        c = new ServerExtensionsEntryConfig(this.extensionFolder);
-        config.Extensions.extensions.push(c);
+    } catch (e) {
+      console.error(LOG_TAG, 'Error during loading config. Reverting to defaults.');
+      console.error(e);
+      if (showDetailedError) {
+        console.error(LOG_TAG, 'This is most likely due to: 1) you added a bad configuration in the server.json OR 2) The configuration changed in the latest release.');
+        NotificationManager.error('Ca\'nt load config. Reverting to default. This is most likely due to: 1) you added a bad configuration in the server.json OR 2) The configuration changed in the latest release.', (e.toString ? e.toString() : JSON.stringify(e)));
       }
-      return c;
-
-  }
-
-  public getConfig(): C {
-    return this.findConfig(Config).configs as C;
-  }
-
-  public setTemplate(template: new() => C): void {
-    this.template = template;
-    this.loadToConfig(Config);
-    Config.loadSync();
-  }
-
-  loadToConfig(config: PrivateConfigClass) {
-    if (!this.template) {
-      return;
     }
-
-    const confTemplate = ConfigClassBuilder.attachPrivateInterface(new this.template());
-    const extConf = this.findConfig(config);
-    extConf.configs = confTemplate;
+    return pc;
   }
 }
