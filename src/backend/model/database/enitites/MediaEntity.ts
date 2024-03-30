@@ -132,9 +132,9 @@ export class MediaMetadataEntity implements MediaMetadata {
   @Column(() => PositionMetaDataEntity)
   positionData: PositionMetaDataEntity;
 
-  @Column('tinyint', {unsigned: true})
+  @Column('tinyint', {unsigned: false})
   @Index()
-  rating: 0 | 1 | 2 | 3 | 4 | 5;
+  rating: -1 | 0 | 1 | 2 | 3 | 4 | 5;
 
   @OneToMany(() => PersonJunctionTable, (junctionTable) => junctionTable.media)
   personJunction: PersonJunctionTable[];
