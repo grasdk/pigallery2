@@ -232,14 +232,6 @@ export class MetadataLoader {
       translateValues: false, //don't translate orientation from numbers to strings etc.
       mergeOutput: false //don't merge output, because things like Microsoft Rating (percent) and xmp.rating will be merged
     };
-
-    //Function to convert html code for special characters into their corresponding character (used in exif.photoshop-section)
-    const unescape = (tag: string) => {
-      return tag.replace(/&#([0-9]{1,3});/gi, function (match, numStr) {
-        return String.fromCharCode(parseInt(numStr, 10));
-      });
-    }
-
     try {
       let bufferSize = Config.Media.photoMetadataSize;
       try {
@@ -251,6 +243,15 @@ export class MetadataLoader {
       } catch (err) {
         // ignoring errors
       }
+      try {
+        //read the actual image size, don't rely on tags for this
+        const info = imageSize(fullPath);
+        metadata.size = { width: info.width, height: info.height };
+      } catch (e) {
+        //in case of failure, set dimensions to 0 so they may be read via tags
+        metadata.size = { width: 0, height: 0 };
+      }
+
 
       const data = Buffer.allocUnsafe(bufferSize);
       fileHandle = await fs.promises.open(fullPath, 'r');
@@ -264,14 +265,6 @@ export class MetadataLoader {
         await fileHandle.close();
       }
       try {
-        try {
-          //read the actual image size, don't rely on tags for this
-          const info = imageSize(fullPath);
-          metadata.size = { width: info.width, height: info.height };
-        } catch (e) {
-          //in case of failure, set dimensions to 0 so they may be read via tags
-          metadata.size = { width: 0, height: 0 };
-        }
 
 
         try { //Parse iptc data using the IptcParser, which works correctly for both UTF-8 and ASCII
@@ -319,11 +312,6 @@ export class MetadataLoader {
           // ignoring errors
         }
 
-        if (!metadata.creationDate) {
-          // creationDate can be negative, when it was created before epoch (1970)
-          metadata.creationDate = 0;
-        }
-
         try {
           // search for sidecar and merge metadata
           const fullPathWithoutExt = path.join(path.parse(fullPath).dir, path.parse(fullPath).name);
@@ -339,30 +327,10 @@ export class MetadataLoader {
               const sidecarData: any = await exifr.sidecar(sidecarPath, exifrOptions);
               if (sidecarData !== undefined) {
                 MetadataLoader.mapMetadata(metadata, sidecarData);
-                let hasPhotoshopDate = false;
-                if (sidecarData.photoshop !== undefined) {
-                  if (sidecarData.photoshop.DateCreated !== undefined) {
-                    const date = Utils.timestampToMS(sidecarData.photoshop.DateCreated, null);
-                    if (date) {
-                      metadata.creationDate = date;
-                      hasPhotoshopDate = true;
-                    }
-                  }
-                }
-                if (sidecarData.xmp !== undefined) {
-                  if (
-                    !hasPhotoshopDate && (
-                      sidecarData.xmp.CreateDate !== undefined ||
-                      sidecarData.xmp.ModifyDate !== undefined
-                    )
-                  ) {
-                    metadata.creationDate =
-                      Utils.timestampToMS(sidecarData.xmp.CreateDate, null) ||
-                      Utils.timestampToMS(sidecarData.xmp.ModifyDate, null) ||
-                      metadata.creationDate;
-                  }
-                }
-
+                metadata.creationDate = Utils.timestampToMS(sidecarData?.photoshop?.DateCreated, null) ||
+                                        Utils.timestampToMS(sidecarData?.xmp?.CreateDate, null) ||
+                                        Utils.timestampToMS(sidecarData?.xmp?.ModifyDate, null) ||
+                                        metadata.creationDate;
               }
             }
           }
@@ -370,7 +338,10 @@ export class MetadataLoader {
           Logger.silly(LOG_TAG, 'Error loading sidecar metadata for : ' + fullPath);
           Logger.silly(err);
         }
-
+        if (!metadata.creationDate) {
+          // creationDate can be negative, when it was created before epoch (1970)
+          metadata.creationDate = 0;
+        }
       } catch (err) {
         Logger.error(LOG_TAG, 'Error during reading photo: ' + fullPath);
         console.error(err);
