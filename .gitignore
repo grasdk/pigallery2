@@ -17,6 +17,7 @@ test/e2e/**/*.js
 test/e2e/**/*.js.map
 test/*.js
 test/*.js.map
+test/tmp/*
 benchmark/**/*.js
 benchmark/**/*.js.map
 gulpfile.js
