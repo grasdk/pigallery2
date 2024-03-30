@@ -362,22 +362,7 @@ export class MetadataLoader {
                       metadata.creationDate;
                   }
                 }
-                if (sidecarData.exif !== undefined) {
-                  if (
-                    sidecarData.exif.GPSLatitude !== undefined &&
-                    sidecarData.exif.GPSLongitude !== undefined
-                  ) {
-                    metadata.positionData = metadata.positionData || {};
-                    metadata.positionData.GPSData = {};
 
-                    metadata.positionData.GPSData.longitude = Utils.xmpExifGpsCoordinateToDecimalDegrees(
-                      sidecarData.exif.GPSLongitude
-                    );
-                    metadata.positionData.GPSData.latitude = Utils.xmpExifGpsCoordinateToDecimalDegrees(
-                      sidecarData.exif.GPSLatitude
-                    );
-                  }
-                }
               }
             }
           }
@@ -573,31 +558,34 @@ export class MetadataLoader {
       }
     }
     if (Object.keys(metadata.cameraData).length === 0) {
-      metadata.cameraData = undefined;
+      delete metadata.cameraData;
     }
   }
 
   private static mapGPS(metadata: PhotoMetadata, exif: any) {
-    if (exif.gps) {
+    try {
+    if (exif.gps || (exif.exif && exif.exif.GPSLatitude && exif.exif.GPSLongitude)) {
       metadata.positionData = metadata.positionData || {};
       metadata.positionData.GPSData = metadata.positionData.GPSData || {};
 
-      if (Utils.isFloat32(exif.gps.longitude)) {
-        metadata.positionData.GPSData.longitude = parseFloat(
-          exif.gps.longitude.toFixed(6)
-        );
-      }
-      if (Utils.isFloat32(exif.gps.latitude)) {
-        metadata.positionData.GPSData.latitude = parseFloat(
-          exif.gps.latitude.toFixed(6)
-        );
-      }
+      metadata.positionData.GPSData.longitude = Utils.isFloat32(exif.gps?.longitude) ? exif.gps.longitude : Utils.xmpExifGpsCoordinateToDecimalDegrees(exif.exif.GPSLongitude);
+      metadata.positionData.GPSData.latitude = Utils.isFloat32(exif.gps?.latitude) ? exif.gps.latitude : Utils.xmpExifGpsCoordinateToDecimalDegrees(exif.exif.GPSLatitude);
 
+      metadata.positionData.GPSData.longitude = parseFloat(metadata.positionData.GPSData.longitude.toFixed(6))
+      metadata.positionData.GPSData.latitude = parseFloat(metadata.positionData.GPSData.latitude.toFixed(6))
+    }
+    } catch (err) {
+      Logger.error(LOG_TAG, 'Error during reading of GPS data: ' + err);
+    } finally {
+      if (metadata.positionData?.GPSData &&
+          (Object.keys(metadata.positionData.GPSData).length === 0 ||
+          metadata.positionData.GPSData.longitude === undefined ||
+          metadata.positionData.GPSData.latitude === undefined)) {
+          delete metadata.positionData.GPSData;
+      }
       if (metadata.positionData) {
-        if (!metadata.positionData.GPSData ||
-          Object.keys(metadata.positionData.GPSData).length === 0) {
-          metadata.positionData.GPSData = undefined;
-          metadata.positionData = undefined;
+        if (Object.keys(metadata.positionData).length === 0) {
+          delete metadata.positionData;
         }
       }
     }

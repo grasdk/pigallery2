@@ -383,6 +383,9 @@ export class Utils {
   }
 
   public static xmpExifGpsCoordinateToDecimalDegrees(text: string): number {
+    if (!text) {
+      return undefined;
+    }
     const parts = text.match(/^([0-9]+),([0-9.]+)([EWNS])$/);
     const degrees: number = parseInt(parts[1], 10);
     const minutes: number = parseFloat(parts[2]);
