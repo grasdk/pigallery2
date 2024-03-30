@@ -11,5 +11,11 @@
   "keywords": [
     "Travel"
   ],
-  "rating": 3
+  "rating": 3,
+  "positionData": {
+    "GPSData": {
+      "latitude": 50.089587,
+      "longitude": 14.39741
+    }
+  }
 }

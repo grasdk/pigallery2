@@ -143,52 +143,7 @@ export class MetadataLoader {
           if (fs.existsSync(sidecarPath)) {
             const sidecarData: any = await exifr.sidecar(sidecarPath);
             if (sidecarData !== undefined) {
-              if (sidecarData.dc !== undefined) {
-                if (sidecarData.dc.subject !== undefined) {
-                  if (metadata.keywords === undefined) {
-                    metadata.keywords = [];
-                  }
-                  let keywords = sidecarData.dc.subject || [];
-                  if (typeof keywords === 'string') {
-                    keywords = [keywords];
-                  }
-                  for (const kw of keywords) {
-                    if (metadata.keywords.indexOf(kw) === -1) {
-                      metadata.keywords.push(kw);
-                    }
-                  }
-                }
-              }
-              let hasPhotoshopDate = false;
-              if (sidecarData.photoshop !== undefined) {
-                if (sidecarData.photoshop.DateCreated !== undefined) {
-                  const date = Utils.timestampToMS(sidecarData.photoshop.DateCreated, null);
-                  if (date) {
-                    metadata.creationDate = date;
-                    hasPhotoshopDate = true;
-                  }
-                }
-              }
-              if (Object.hasOwn(sidecarData, 'xap')) {
-                (sidecarData as any)['xmp'] = (sidecarData as any)['xap'];
-                delete (sidecarData as any)['xap'];
-              }
-              if (sidecarData.xmp !== undefined) {
-                if (sidecarData.xmp.Rating !== undefined) {
-                  metadata.rating = sidecarData.xmp.Rating;
-                }
-                if (
-                  !hasPhotoshopDate && (
-                    sidecarData.xmp.CreateDate !== undefined ||
-                    sidecarData.xmp.ModifyDate !== undefined
-                  )
-                ) {
-                  metadata.creationDate =
-                    Utils.timestampToMS(sidecarData.xmp.CreateDate, null) ||
-                    Utils.timestampToMS(sidecarData.xmp.ModifyDate, null) ||
-                    metadata.creationDate;
-                }
-              }
+              MetadataLoader.mapMetadata(metadata, sidecarData);
             }
           }
         }
