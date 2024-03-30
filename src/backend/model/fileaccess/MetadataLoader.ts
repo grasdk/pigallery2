@@ -312,7 +312,7 @@ export class MetadataLoader {
       exif['xmp'] = exif['xap'];
       delete exif['xap'];
     }
-    let orientation = MetadataLoader.getOrientation(exif);
+    const orientation = MetadataLoader.getOrientation(exif);
     MetadataLoader.mapImageDimensions(metadata, exif, orientation);
     MetadataLoader.mapKeywords(metadata, exif);
     MetadataLoader.mapTimestampAndOffset(metadata, exif);
