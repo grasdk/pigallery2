@@ -462,8 +462,12 @@ export class MetadataLoader {
       metadata.positionData.GPSData.longitude = Utils.isFloat32(exif.gps?.longitude) ? exif.gps.longitude : Utils.xmpExifGpsCoordinateToDecimalDegrees(exif.exif.GPSLongitude);
       metadata.positionData.GPSData.latitude = Utils.isFloat32(exif.gps?.latitude) ? exif.gps.latitude : Utils.xmpExifGpsCoordinateToDecimalDegrees(exif.exif.GPSLatitude);
 
-      metadata.positionData.GPSData.longitude = parseFloat(metadata.positionData.GPSData.longitude.toFixed(6))
-      metadata.positionData.GPSData.latitude = parseFloat(metadata.positionData.GPSData.latitude.toFixed(6))
+      if (metadata.positionData.GPSData.longitude !== undefined) {
+        metadata.positionData.GPSData.longitude = parseFloat(metadata.positionData.GPSData.longitude.toFixed(6))
+      }
+      if (metadata.positionData.GPSData.latitude !== undefined) {
+        metadata.positionData.GPSData.latitude = parseFloat(metadata.positionData.GPSData.latitude.toFixed(6))
+      }
     }
     } catch (err) {
       Logger.error(LOG_TAG, 'Error during reading of GPS data: ' + err);
@@ -511,6 +515,15 @@ export class MetadataLoader {
       exif.xmp.Rating !== undefined) {
       metadata.rating = exif.xmp.Rating;
     }
+    if (metadata.rating !== undefined) {
+      if (metadata.rating < -1) { //Rating -1 means "rejected" according to adobe's spec
+        metadata.rating = -1;
+      } else if (metadata.rating > 5) {
+        metadata.rating = 5;
+      }
+    } //else {
+      //metadata.rating = 0; //Rating 0 means "unrated" according to adobe's spec
+    //}
   }
 
   private static mapFaces(metadata: PhotoMetadata, exif: any, orientation: number) {
