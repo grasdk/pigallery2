@@ -189,7 +189,7 @@ export class Utils {
   }
 
   static getOffsetMinutes(offsetString: string) { //Convert offset string (+HH:MM or -HH:MM) into a minute value
-    const regex = /^([+-](0[0-9]|1[0-4]):[0-5][0-9])$/;  //checks if offset is between -14:00 and +14:00. 
+    const regex = /^([+-](0[0-9]|1[0-4]):[0-5][0-9])$/;  //checks if offset is between -14:00 and +14:00.
                                                          //-12:00 is the lowest valid UTC-offset, but we allow down to -14 for efficiency
     if (regex.test(offsetString)) {
       const hhmm = offsetString.split(":");
@@ -407,6 +407,19 @@ export class Utils {
     const minutes: number = parseFloat(parts[2]);
     const sign = (parts[3] === "N" || parts[3] === "E") ? 1 : -1;
     return (sign * (degrees + (minutes / 60.0)))
+  }
+
+
+  public static sortableFilename(filename: string): string {
+    const lastDot = filename.lastIndexOf(".");
+
+    // Avoid 0 as well as -1 to prevent empty names for extensionless dot-files
+    if (lastDot > 0) {
+      return filename.substring(0, lastDot);
+    }
+
+    // Fallback to the full name
+    return filename;
   }
 }
 

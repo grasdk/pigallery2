@@ -132,8 +132,20 @@ export class GallerySortingService {
     }
     switch (sorting.method) {
       case SortByTypes.Name:
-        media.sort((a: PhotoDTO, b: PhotoDTO) =>
-            this.collator.compare(a.name, b.name)
+        media.sort((a: PhotoDTO, b: PhotoDTO) => {
+          const aSortable = Utils.sortableFilename(a.name)
+          const bSortable = Utils.sortableFilename(b.name)
+
+          if (aSortable === bSortable) {
+            // If the trimmed filenames match, use the full name as tie breaker
+            // This preserves a consistent final position for files named e.g.,
+            // 10.jpg and 10.png, even if their starting position in the list
+            // changes based on any previous sorting that's happened under different heuristics
+            return this.collator.compare(a.name, b.name)
+          }
+
+          return this.collator.compare(aSortable, bSortable)
+        }
         );
         break;
       case SortByTypes.Date:

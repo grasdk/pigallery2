@@ -3,6 +3,7 @@ import { imageSize } from 'image-size';
 import { Config } from '../../../common/config/private/Config';
 import { FaceRegion, PhotoMetadata } from '../../../common/entities/PhotoDTO';
 import { VideoMetadata } from '../../../common/entities/VideoDTO';
+import { RatingTypes } from '../../../common/entities/MediaDTO';
 import { Logger } from '../../Logger';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -524,17 +525,17 @@ export class MetadataLoader {
   private static mapRating(metadata: PhotoMetadata, exif: any) {
     if (exif.xmp &&
       exif.xmp.Rating !== undefined) {
-      metadata.rating = exif.xmp.Rating;
-    }
-    if (metadata.rating !== undefined) {
-      if (metadata.rating < -1) { //Rating -1 means "rejected" according to adobe's spec
-        metadata.rating = -1;
-      } else if (metadata.rating > 5) {
+      const rting = Math.round(exif.xmp.Rating);
+      if (rting <= 0) {
+        //We map all ratings below 0 to 0. Lightroom supports value -1, but most other tools (including this) don't.
+        //Rating 0 means "unrated" according to adobe's spec, so we delete the attribute in pigallery for the same effect
+        delete metadata.rating;
+      } else if (rting > 5) { //map all ratings above 5 to 5
         metadata.rating = 5;
+      } else {
+        metadata.rating = (rting as RatingTypes);
       }
-    } //else {
-      //metadata.rating = 0; //Rating 0 means "unrated" according to adobe's spec
-    //}
+    } 
   }
 
   private static mapFaces(metadata: PhotoMetadata, exif: any, orientation: number) {
