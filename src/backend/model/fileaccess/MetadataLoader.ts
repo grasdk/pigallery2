@@ -141,7 +141,7 @@ export class MetadataLoader {
 
         for (const sidecarPath of sidecarPaths) {
           if (fs.existsSync(sidecarPath)) {
-            const sidecarData : any = await exifr.sidecar(sidecarPath);
+            const sidecarData: any = await exifr.sidecar(sidecarPath);
             if (sidecarData !== undefined) {
               if (sidecarData.dc !== undefined) {
                 if (sidecarData.dc.subject !== undefined) {
@@ -336,7 +336,7 @@ export class MetadataLoader {
 
           for (const sidecarPath of sidecarPaths) {
             if (fs.existsSync(sidecarPath)) {
-              const sidecarData : any = await exifr.sidecar(sidecarPath, exifrOptions);
+              const sidecarData: any = await exifr.sidecar(sidecarPath, exifrOptions);
               if (sidecarData !== undefined) {
                 MetadataLoader.mapMetadata(metadata, sidecarData);
                 let hasPhotoshopDate = false;
@@ -400,18 +400,53 @@ export class MetadataLoader {
   }
 
   private static mapMetadata(metadata: PhotoMetadata, exif: any) {
-
-    //Function to convert html code for special characters into their corresponding character (used in exif.photoshop-section)
-    const unescape = (tag: string) => {
-      return tag.replace(/&#([0-9]{1,3});/gi, function (match, numStr) {
-        return String.fromCharCode(parseInt(numStr, 10));
-      });
+    //replace adobe xap-section with xmp to reuse parsing
+    if (Object.hasOwn(exif, 'xap')) {
+      exif['xmp'] = exif['xap'];
+      delete exif['xap'];
+    }
+    let orientation = MetadataLoader.getOrientation(exif);
+    MetadataLoader.mapImageDimensions(metadata, exif, orientation);
+    MetadataLoader.mapKeywords(metadata, exif);
+    MetadataLoader.mapTimestampAndOffset(metadata, exif);
+    MetadataLoader.mapCameraData(metadata, exif);
+    MetadataLoader.mapGPS(metadata, exif);
+    MetadataLoader.mapToponyms(metadata, exif);
+    MetadataLoader.mapRating(metadata, exif);
+    if (Config.Faces.enabled) {
+      MetadataLoader.mapFaces(metadata, exif, orientation);
     }
 
+  }
+  private static getOrientation(exif: any): number {
     let orientation = 1; //Orientation 1 is normal
+    if (exif.ifd0?.Orientation != undefined) {
+      orientation = parseInt(exif.ifd0.Orientation as any, 10) as number;
+    }
+    return orientation;
+  }
 
-    //the parsed data is structured in sections, we read the data by section
-    //dc-section (subject is the only tag we want from dc)
+  private static mapImageDimensions(metadata: PhotoMetadata, exif: any, orientation: number) {
+    if (metadata.size.width <= 0) {
+      metadata.size.width = exif.ifd0?.ImageWidth || exif.exif?.ExifImageWidth;
+    }
+    if (metadata.size.height <= 0) {
+      metadata.size.height = exif.ifd0?.ImageHeight || exif.exif?.ExifImageHeight;
+    }
+    metadata.size.height = Math.max(metadata.size.height, 1); //ensure height dimension is positive
+    metadata.size.width = Math.max(metadata.size.width, 1); //ensure width  dimension is positive
+
+    //we need to switch width and height for images that are rotated sideways
+    if (4 < orientation) { //Orientation is sideways (rotated 90% or 270%)
+      // noinspection JSSuspiciousNameCombination
+      const height = metadata.size.width;
+      // noinspection JSSuspiciousNameCombination
+      metadata.size.width = metadata.size.height;
+      metadata.size.height = height;
+    }
+  }
+
+  private static mapKeywords(metadata: PhotoMetadata, exif: any) {
     if (exif.dc &&
       exif.dc.subject &&
       exif.dc.subject.length > 0) {
@@ -425,32 +460,9 @@ export class MetadataLoader {
         }
       }
     }
+  }
 
-    //ifd0 section
-    if (exif.ifd0) {
-      if (exif.ifd0.ImageWidth && metadata.size.width <= 0) {
-        metadata.size.width = exif.ifd0.ImageWidth;
-      }
-      if (exif.ifd0.ImageHeight && metadata.size.height <= 0) {
-        metadata.size.height = exif.ifd0.ImageHeight;
-      }
-      if (exif.ifd0.Orientation != undefined) {
-        orientation = parseInt(
-          exif.ifd0.Orientation as any,
-          10
-        ) as number;
-      }
-      if (exif.ifd0.Make && exif.ifd0.Make !== '') {
-        metadata.cameraData = metadata.cameraData || {};
-        metadata.cameraData.make = '' + exif.ifd0.Make;
-      }
-      if (exif.ifd0.Model && exif.ifd0.Model !== '') {
-        metadata.cameraData = metadata.cameraData || {};
-        metadata.cameraData.model = '' + exif.ifd0.Model;
-      }
-      //if (exif.ifd0.ModifyDate) {} //Deferred to the exif-section where the other timestamps are
-    }
-
+  private static mapTimestampAndOffset(metadata: PhotoMetadata, exif: any) {
     //exif section starting with the date sectino
     if (exif.exif) {
       //Preceedence of dates: exif.DateTimeOriginal, exif.CreateDate, ifd0.ModifyDate, ihdr["Creation Time"], xmp.MetadataDate, file system date
@@ -487,41 +499,85 @@ export class MetadataLoader {
         metadata.creationDate = Utils.timestampToMS(exif.xmp.MetadataDate, any_offset);
         metadata.creationDateOffset = any_offset;
       }
+    }
+    //exif section starting with the date sectino
+    if (exif.exif) {
+      //Preceedence of dates: exif.DateTimeOriginal, exif.CreateDate, ifd0.ModifyDate, ihdr["Creation Time"], xmp.MetadataDate, file system date
+      //Filesystem is the absolute last resort, and it's hard to write tests for, since file system dates are changed on e.g. git clone.
+      if (exif.exif.DateTimeOriginal) {
+        //DateTimeOriginal is when the camera shutter closed
+        let offset = exif.exif.OffsetTimeOriginal; //OffsetTimeOriginal is the corresponding offset
+        if (!offset) { //Find offset among other options if possible
+          offset = exif.exif.OffsetTimeDigitized || exif.exif.OffsetTime || Utils.getTimeOffsetByGPSStamp(exif.exif.DateTimeOriginal, exif.exif.GPSTimeStamp, exif.gps);
+        }
+        metadata.creationDate = Utils.timestampToMS(exif.exif.DateTimeOriginal, offset);
+        metadata.creationDateOffset = offset;
+      } else if (exif.exif.CreateDate) { //using else if here, because DateTimeOriginal has preceedence
+        //Create is when the camera wrote the file (typically within the same ms as shutter close)
+        let offset = exif.exif.OffsetTimeDigitized; //OffsetTimeDigitized is the corresponding offset
+        if (!offset) { //Find offset among other options if possible
+          offset = exif.exif.OffsetTimeOriginal || exif.exif.OffsetTime || Utils.getTimeOffsetByGPSStamp(exif.exif.DateTimeOriginal, exif.exif.GPSTimeStamp, exif.gps);
+        }
+        metadata.creationDate = Utils.timestampToMS(exif.exif.CreateDate, offset);
+        metadata.creationDateOffset = offset;
+      } else if (exif.ifd0?.ModifyDate) { //using else if here, because DateTimeOriginal and CreatDate have preceedence
+        let offset = exif.exif.OffsetTime; //exif.Offsettime is the offset corresponding to ifd0.ModifyDate
+        if (!offset) { //Find offset among other options if possible
+          offset = exif.exif.DateTimeOriginal || exif.exif.OffsetTimeDigitized || Utils.getTimeOffsetByGPSStamp(exif.ifd0.ModifyDate, exif.exif.GPSTimeStamp, exif.gps);
+        }
+        metadata.creationDate = Utils.timestampToMS(exif.ifd0.ModifyDate, offset);
+        metadata.creationDateOffset = offset
+      } else if (exif.ihdr && exif.ihdr["Creation Time"]) {// again else if (another fallback date if the good ones aren't there) {
+        const any_offset = exif.exif.DateTimeOriginal || exif.exif.OffsetTimeDigitized || exif.exif.OffsetTime || Utils.getTimeOffsetByGPSStamp(exif.ifd0.ModifyDate, exif.exif.GPSTimeStamp, exif.gps);
+        metadata.creationDate = Utils.timestampToMS(exif.ihdr["Creation Time"], any_offset);
+        metadata.creationDateOffset = any_offset;
+      } else if (exif.xmp?.MetadataDate) {// again else if (another fallback date if the good ones aren't there - metadata date is probably later than actual creation date, but much better than file time) {
+        const any_offset = exif.exif.DateTimeOriginal || exif.exif.OffsetTimeDigitized || exif.exif.OffsetTime || Utils.getTimeOffsetByGPSStamp(exif.ifd0.ModifyDate, exif.exif.GPSTimeStamp, exif.gps);
+        metadata.creationDate = Utils.timestampToMS(exif.xmp.MetadataDate, any_offset);
+        metadata.creationDateOffset = any_offset;
+      }
+    }
+  }
+
+  private static mapCameraData(metadata: PhotoMetadata, exif: any) {
+    metadata.cameraData = metadata.cameraData || {};
+    if (exif.ifd0) {
+      if (exif.ifd0.Make && exif.ifd0.Make !== '') {
+        metadata.cameraData.make = '' + exif.ifd0.Make;
+      }
+      if (exif.ifd0.Model && exif.ifd0.Model !== '') {
+        metadata.cameraData.model = '' + exif.ifd0.Model;
+      }
+    }
+    if (exif.exif) {
       if (exif.exif.LensModel && exif.exif.LensModel !== '') {
-        metadata.cameraData = metadata.cameraData || {};
         metadata.cameraData.lens = '' + exif.exif.LensModel;
       }
       if (Utils.isUInt32(exif.exif.ISO)) {
-        metadata.cameraData = metadata.cameraData || {};
         metadata.cameraData.ISO = parseInt('' + exif.exif.ISO, 10);
       }
       if (Utils.isFloat32(exif.exif.FocalLength)) {
-        metadata.cameraData = metadata.cameraData || {};
         metadata.cameraData.focalLength = parseFloat(
           '' + exif.exif.FocalLength
         );
       }
       if (Utils.isFloat32(exif.exif.ExposureTime)) {
-        metadata.cameraData = metadata.cameraData || {};
         metadata.cameraData.exposure = parseFloat(
           parseFloat('' + exif.exif.ExposureTime).toFixed(6)
         );
       }
       if (Utils.isFloat32(exif.exif.FNumber)) {
-        metadata.cameraData = metadata.cameraData || {};
         metadata.cameraData.fStop = parseFloat(
           parseFloat('' + exif.exif.FNumber).toFixed(2)
         );
       }
-      if (exif.exif.ExifImageWidth && metadata.size.width <= 0) {
-        metadata.size.width = exif.exif.ExifImageWidth;
-      }
-      if (exif.exif.ExifImageHeight && metadata.size.height <= 0) {
-        metadata.size.height = exif.exif.ExifImageHeight;
-      }
     }
+    if (Object.keys(metadata.cameraData).length === 0) {
+      metadata.cameraData = undefined;
+    }
+  }
 
-    //gps section
+  private static mapGPS(metadata: PhotoMetadata, exif: any) {
     if (exif.gps) {
       metadata.positionData = metadata.positionData || {};
       metadata.positionData.GPSData = metadata.positionData.GPSData || {};
@@ -545,7 +601,16 @@ export class MetadataLoader {
         }
       }
     }
-    //photoshop section (sometimes has City, Country and State)
+  }
+
+  private static mapToponyms(metadata: PhotoMetadata, exif: any) {
+    //Function to convert html code for special characters into their corresponding character (used in exif.photoshop-section)
+    const unescape = (tag: string) => {
+      return tag.replace(/&#([0-9]{1,3});/gi, function (match, numStr) {
+        return String.fromCharCode(parseInt(numStr, 10));
+      });
+    }
+    //photoshop section sometimes has City, Country and State
     if (exif.photoshop) {
       if (!metadata.positionData?.country && exif.photoshop.Country) {
         metadata.positionData = metadata.positionData || {};
@@ -560,35 +625,18 @@ export class MetadataLoader {
         metadata.positionData.city = unescape(exif.photoshop.City);
       }
     }
+  }
 
-    ///////////////////////////////////////
-    metadata.size.height = Math.max(metadata.size.height, 1); //ensure height dimension is positive
-    metadata.size.width = Math.max(metadata.size.width, 1); //ensure width  dimension is positive
-
-    //Before moving on to the XMP section (particularly the regions (mwg-rs))
-    //we need to switch width and height for images that are rotated sideways
-    if (4 < orientation) { //Orientation is sideways (rotated 90% or 270%)
-      // noinspection JSSuspiciousNameCombination
-      const height = metadata.size.width;
-      // noinspection JSSuspiciousNameCombination
-      metadata.size.width = metadata.size.height;
-      metadata.size.height = height;
-    }
-    ///////////////////////////////////////
-
-    //replace adobe xap-section with xmp to reuse parsing
-    if (Object.hasOwn(exif, 'xap')) {
-      exif['xmp'] = exif['xap'];
-      delete exif['xap'];
-    }
-    //xmp section
-    if (exif.xmp && 
-        exif.xmp.Rating !== undefined) {
+  private static mapRating(metadata: PhotoMetadata, exif: any) {
+    if (exif.xmp &&
+      exif.xmp.Rating !== undefined) {
       metadata.rating = exif.xmp.Rating;
     }
+  }
+
+  private static mapFaces(metadata: PhotoMetadata, exif: any, orientation: number) {
     //xmp."mwg-rs" section
-    if (Config.Faces.enabled &&
-      exif["mwg-rs"] &&
+    if (exif["mwg-rs"] &&
       exif["mwg-rs"].Regions) {
       const faces: FaceRegion[] = [];
       const regionListVal = Array.isArray(exif["mwg-rs"].Regions.RegionList) ? exif["mwg-rs"].Regions.RegionList : [exif["mwg-rs"].Regions.RegionList];
