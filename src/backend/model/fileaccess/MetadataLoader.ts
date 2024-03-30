@@ -315,6 +315,8 @@ export class MetadataLoader {
     const orientation = MetadataLoader.getOrientation(exif);
     MetadataLoader.mapImageDimensions(metadata, exif, orientation);
     MetadataLoader.mapKeywords(metadata, exif);
+    MetadataLoader.mapTitle(metadata, exif);
+    MetadataLoader.mapCaption(metadata, exif);
     MetadataLoader.mapTimestampAndOffset(metadata, exif);
     MetadataLoader.mapCameraData(metadata, exif);
     MetadataLoader.mapGPS(metadata, exif);
@@ -368,6 +370,15 @@ export class MetadataLoader {
       }
     }
   }
+
+  private static mapTitle(metadata: PhotoMetadata, exif: any) {
+    metadata.title = exif.dc?.title?.value || metadata.title;
+  }
+
+  private static mapCaption(metadata: PhotoMetadata, exif: any) {
+    metadata.caption = exif.dc?.description?.value || metadata.caption;
+  }
+
 
   private static mapTimestampAndOffset(metadata: PhotoMetadata, exif: any) {
     metadata.creationDate = Utils.timestampToMS(exif?.photoshop?.DateCreated, null) ||

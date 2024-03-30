@@ -35,6 +35,12 @@ describe('MetadataLoader', () => {
     expect(Utils.clone(data)).to.be.deep.equal(expected);
   });
 
+  it('should load png with description', async () => {
+    const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/description.png'));
+    const expected = require(path.join(__dirname, '/../../../assets/description.json'));
+    expect(Utils.clone(data)).to.be.deep.equal(expected);
+  });
+
   it('should load jpg', async () => {
     const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/test image öüóőúéáű-.,.jpg'));
     const expected = require(path.join(__dirname, '/../../../assets/test image öüóőúéáű-.,.json'));
