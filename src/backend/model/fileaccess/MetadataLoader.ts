@@ -139,13 +139,13 @@ export class MetadataLoader {
           fullPathWithoutExt + '.xmp',
           fullPathWithoutExt + '.XMP',
         ];
-
         for (const sidecarPath of sidecarPaths) {
           if (fs.existsSync(sidecarPath)) {
             const sidecarData: any = await exifr.sidecar(sidecarPath);
             if (sidecarData !== undefined) {
               MetadataLoader.mapMetadata(metadata, sidecarData);
             }
+            break; //Break the loop as soon as a sidecar is found, no need to check the extra sidecar paths
           }
         }
       } catch (err) {
@@ -373,11 +373,11 @@ export class MetadataLoader {
   }
 
   private static mapTitle(metadata: PhotoMetadata, exif: any) {
-    metadata.title = exif.dc?.title?.value || metadata.title;
+    metadata.title = exif.dc?.title?.value || metadata.title || exif.photoshop?.Headline || exif.acdsee?.caption; //acdsee caption holds the title when data is saved by digikam. Used as last resort if iptc and dc do not contain the data
   }
 
   private static mapCaption(metadata: PhotoMetadata, exif: any) {
-    metadata.caption = exif.dc?.description?.value || metadata.caption;
+    metadata.caption = exif.dc?.description?.value || metadata.caption || exif.ifd0?.ImageDescription || exif.exif?.UserComment?.value || exif.Iptc4xmpCore?.ExtDescrAccessibility?.value ||exif.acdsee?.notes;
   }
 
 
