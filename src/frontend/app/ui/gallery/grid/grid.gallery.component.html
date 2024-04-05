@@ -5,7 +5,7 @@
         <ng-container [ngSwitch]="sortingService.grouping.value.method">
           <div *ngSwitchCase="GroupByTypes.Rating" class="mt-4 mb-3">
             <h6 class="ms-2">
-              <ng-icon *ngFor="let i of [0,1,2,3,4]"
+              <ng-icon *ngFor="let i of [-1,0,1,2,3,4]"
                        [name]="(i < (group.name | parseInt)) ? 'ionStar' : 'ionStarOutline'"></ng-icon>
             </h6>
           </div>
