@@ -35,7 +35,7 @@ export class Utils {
             delete obj[key];
           }
         }
-      } else if (obj[key] === null) {
+      } else if (obj[key] === null || obj[key] === undefined) {
         delete obj[key];
       }
     }
@@ -132,8 +132,8 @@ export class Utils {
     //replace : with - in the yyyy-mm-dd part of the timestamp.
     let formattedTimestamp = timestamp.substring(0,9).replaceAll(':', '-') + timestamp.substring(9,timestamp.length);
     if (formattedTimestamp.indexOf("Z") > 0) { //replace Z (and what comes after the Z) with offset
-      formattedTimestamp.substring(0, formattedTimestamp.indexOf("Z")) + (offset ? offset : '+00:00');
-    } else if (formattedTimestamp.indexOf("+") > 0) { //don't do anything
+      formattedTimestamp = formattedTimestamp.substring(0, formattedTimestamp.indexOf("Z")) + (offset ? offset : '+00:00');
+    } else if (formattedTimestamp.indexOf("+") > 0 || timestamp.substring(9,timestamp.length).indexOf("-") > 0) { //don't do anything
     } else { //add offset
       formattedTimestamp = formattedTimestamp + (offset ? offset : '+00:00');
     }
@@ -144,11 +144,11 @@ export class Utils {
   //function to extract offset string from timestamp string, returns undefined if timestamp does not contain offset
   static timestampToOffsetString(timestamp: string) {
     try {
-      const idx = timestamp.indexOf("+");
-      if (idx > 0) {
-        return timestamp.substring(idx, timestamp.length);
-      }
-      if (timestamp.indexOf("Z") > 0) {
+      const offsetRegex = /[+-]\d{2}:\d{2}$/;
+      const match = timestamp.match(offsetRegex);
+      if (match) {
+        return match[0];
+      } else if (timestamp.indexOf("Z") > 0) {
         return '+00:00';
       }
       return undefined;
@@ -218,6 +218,19 @@ export class Utils {
       dayOfYear++; //Add an extra day for march to december (mn>1) on leap years
     }
     return dayOfYear;
+  }
+
+  //Adding months to a date differently from standard JS
+  //this function makes sure that if date is the 31st and you add a month, you will get the last day of the next month
+  //so adding or subtracting a month from 31st of march will give 30th of april or 28th of february respectively (29th on leap years).
+  static addMonthToDate(date: Date, numMonths: number) {
+    const result = new Date(date)
+    const expectedMonth = ((date.getMonth() + numMonths) % 12 + 12) % 12; //inner %12 + 12 makes correct handling of negative months
+    result.setMonth(result.getMonth() + numMonths);
+    if (result.getMonth() !== expectedMonth) {
+      result.setDate(0);
+    }
+    return result;
   }
 
   static renderDataSize(size: number): string {

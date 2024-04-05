@@ -132,19 +132,12 @@ export class RenderingMWs {
   ): void {
     if (err instanceof ErrorDTO) {
       if (err.details) {
-        Logger.warn('Handled error:');
-        LoggerRouter.log(Logger.warn, req, res);
+        const logFn = Logger.logLevelForError(err.code)
+        LoggerRouter.log(logFn, req, res);
         // use separate rendering for detailsStr
         const d = err.detailsStr;
         delete err.detailsStr;
-        console.log(err);
-        if (err.detailsStr) {
-          try {
-            console.log('details:', JSON.stringify(err.detailsStr));
-          } catch (_) {
-            console.log(err.detailsStr);
-          }
-        }
+        logFn(err);
         err.detailsStr = d;
         delete err.details; // do not send back error object to the client side
 

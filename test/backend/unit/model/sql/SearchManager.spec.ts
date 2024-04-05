@@ -132,18 +132,9 @@ describe('SearchManager', (sqlHelper: DBTestHelper) => {
     delete pFaceLessTmp.metadata.faces;
     d = new Date();
     //we create a date 1 month and 1 day before now
-    if ([1, 3, 5, 7, 8, 10, 0].includes(d.getMonth())) {
-      //Now is a month after a long month: feb (1), april (3), june (5), august(7), september(8), november (10), january (0)
-      pFaceLessTmp.metadata.creationDate = d.getTime() - 60 * 60 * 24 * 32 * 1000;
-    } else if (d.getMonth() == 2 && Utils.isDateFromLeapYear(d)) {
-      //march on leap years
-      pFaceLessTmp.metadata.creationDate = d.getTime() - 60 * 60 * 24 * 30 * 1000;
-    } else if (d.getMonth() == 2) {
-      //march (and not leap years)
-      pFaceLessTmp.metadata.creationDate = d.getTime() - 60 * 60 * 24 * 29 * 1000;
-    } else { //all other months must come after a short month with 30 days, so we subtract 31
-      pFaceLessTmp.metadata.creationDate = d.getTime() - 60 * 60 * 24 * 31 * 1000;
-    }
+    d = Utils.addMonthToDate(d, -1); //subtract 1 month in the "human way"
+    d.setDate(d.getDate()-1); //subtract 1 day
+    pFaceLessTmp.metadata.creationDate = d.getTime();
     pFaceLessTmp.metadata.creationDateOffset = "+02:00";
 
     dir = await DBTestHelper.persistTestDir(directory);

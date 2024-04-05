@@ -779,7 +779,7 @@ export class SearchManager {
                 break;
 
               case DatePatternFrequency.months_ago:
-                to.setUTCMonth(to.getUTCMonth() - tq.agoNumber);
+                to.setTime(Utils.addMonthToDate(to, -1 * tq.agoNumber).getTime());
                 break;
 
               case DatePatternFrequency.years_ago:
