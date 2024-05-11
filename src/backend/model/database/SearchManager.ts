@@ -826,7 +826,7 @@ export class SearchManager {
                 q.where(
                   `(media.metadata.creationDate + (media.metadata.creationDateOffset * 60000)) < :to${queryId}`,
                   textParam
-                ).andWhere(`media.metadata.creationDate + (media.metadata.creationDateOffset * 60000)) >= :from${queryId}`,
+                ).andWhere(`(media.metadata.creationDate + (media.metadata.creationDateOffset * 60000)) >= :from${queryId}`,
                   textParam);
               } else {
                 q.where(
@@ -854,8 +854,6 @@ export class SearchManager {
 
 
               if (Config.Database.type === DatabaseType.sqlite) {
-                //(media.metadata.creationDate + (media.metadata.creationDateOffset * 60000))
-                    
                 if (tq.daysLength == 0) {
                   if (Config.Gallery.ignoreTimestampOffset === true) {
                     q.where(
