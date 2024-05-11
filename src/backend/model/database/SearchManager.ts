@@ -811,9 +811,14 @@ export class SearchManager {
                 q.where(
                   `(media.metadata.creationDate + (media.metadata.creationDateOffset * 60000)) >= :to${queryId}`,
                   textParam
-                ).orWhere(`media.metadata.creationDate < :from${queryId}`,
+                ).orWhere(`(media.metadata.creationDate + (media.metadata.creationDateOffset * 60000)) < :from${queryId}`,
                   textParam);
               } else {
+                q.where(
+                  `media.metadata.creationDate >= :to${queryId}`,
+                  textParam
+                ).orWhere(`media.metadata.creationDate < :from${queryId}`,
+                  textParam);
 
               }
             } else {
@@ -821,10 +826,14 @@ export class SearchManager {
                 q.where(
                   `(media.metadata.creationDate + (media.metadata.creationDateOffset * 60000)) < :to${queryId}`,
                   textParam
-                ).andWhere(`media.metadata.creationDate >= :from${queryId}`,
+                ).andWhere(`media.metadata.creationDate + (media.metadata.creationDateOffset * 60000)) >= :from${queryId}`,
                   textParam);
               } else {
-
+                q.where(
+                  `media.metadata.creationDate < :to${queryId}`,
+                  textParam
+                ).andWhere(`media.metadata.creationDate >= :from${queryId}`,
+                  textParam);
               }
             }
 
