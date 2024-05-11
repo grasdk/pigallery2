@@ -227,10 +227,19 @@ export class Utils {
   }
 
   //Get the MS of the creationDate, adjusted for  the offset. Effectively getting the MS value as if the photo did not contain an offset.
-  //One can consider this "Local" time of the photo.
+  //One can consider this "Local" time of the photo. Starting point is UTC, as MetadataLoader loads timestamps with unknown timestamps as UTC.
   static getLocalTimeMS(creationDate: number, creationDateOffset: string) {
     const offsetMinutes = Utils.getOffsetMinutes(creationDateOffset);
     return creationDate + (offsetMinutes ? (offsetMinutes * 60000) : 0);
+  }
+
+  //Like getLocalTimeMS, but only if localTime is true, otherwise just returns creationDate (global time)
+  static getTimeMS(creationDate: number, creationDateOffset: string, localTime: boolean) {
+    if (localTime) {
+      return Utils.getLocalTimeMS(creationDate, creationDateOffset);
+    } else {
+      return creationDate;
+    }
   }
   
   static isLeapYear(year: number) {

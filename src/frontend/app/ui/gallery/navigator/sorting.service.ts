@@ -150,11 +150,7 @@ export class GallerySortingService {
         break;
       case SortByTypes.Date:
         media.sort((a: PhotoDTO, b: PhotoDTO): number => {
-          if (Config.Gallery.ignoreTimestampOffset === true)  {
-            return Utils.getLocalTimeMS(a.metadata.creationDate, a.metadata.creationDateOffset) - Utils.getLocalTimeMS(b.metadata.creationDate, b.metadata.creationDateOffset);
-          } else {  
-            return a.metadata.creationDate - b.metadata.creationDate;
-          }
+          return Utils.getTimeMS(a.metadata.creationDate, a.metadata.creationDateOffset, Config.Gallery.ignoreTimestampOffset) - Utils.getTimeMS(b.metadata.creationDate, b.metadata.creationDateOffset, Config.Gallery.ignoreTimestampOffset);
         });
         break;
       case SortByTypes.Rating:
@@ -204,7 +200,7 @@ export class GallerySortingService {
           //Datepipe used this way, converts creationDate to date in local time.
           return (m: MediaDTO) => this.datePipe.transform(m.metadata.creationDate, 'longDate', m.metadata.creationDateOffset ? m.metadata.creationDateOffset : 'UTC');
         } else {
-          //Grouping with global time, requires a common timeframe. Here and now it is UTC. (Could be config option later) //TODO: Configurable Default Timezone 
+          //Grouping with global time, requires a common timeframe.
           return (m: MediaDTO) => this.datePipe.transform(m.metadata.creationDate, 'longDate', 'UTC');
         }
 

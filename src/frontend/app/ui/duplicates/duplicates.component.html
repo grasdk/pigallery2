@@ -23,7 +23,7 @@
               <div class="col-2 align-self-center">
                 {{media.metadata.fileSize | fileSize}}
               </div>
-              <div class="col-3 align-self-center" [title]="media.metadata.creationDate"> <!-- //TODO: Offset:  -->
+              <div class="col-3 align-self-center" [title]="media.metadata.creationDate">
                 {{ media.metadata.creationDate | date : 'longDate' : (media.metadata.creationDateOffset ? media.metadata.creationDateOffset : 'UTC') }}, 
                 {{ media.metadata.creationDate | date : (media.metadata.creationDateOffset ? 'HH:mm:ss ZZZZZ' : 'HH:mm:ss') : (media.metadata.creationDateOffset ? media.metadata.creationDateOffset : 'UTC') }}
               </div>

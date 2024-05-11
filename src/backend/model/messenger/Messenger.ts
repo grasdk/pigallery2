@@ -33,7 +33,7 @@ export abstract class Messenger<C extends Record<string, unknown> = Record<strin
     if (Array.isArray(input) && input.length > 0
       && (input as MediaDTO[])[0]?.name
       && (input as MediaDTO[])[0]?.directory
-      && (input as MediaDTO[])[0]?.metadata?.creationDate) { //TODO: Offset: 
+      && (input as MediaDTO[])[0]?.metadata?.creationDate) {
       const media = input as MediaDTOWithThPath[];
       for (let i = 0; i < media.length; ++i) {
         media[i].thumbnailPath = await this.getThumbnail(media[i]);
