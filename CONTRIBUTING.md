@@ -105,3 +105,15 @@ Client side:
 15. Setting `content` BehaviorSubject (rxjs) with the `ContentWrapperWithError` from the server.
 16. Rendering gallery: UI is data binded to the `galleryService.content` [gallery.component.html]
    
+## Running the tests locally
+You can run tests in various ways. If you use VS Code, the built-in testing funtionality is a good way to visualize and run the tests. You can also run tests from the command line:
+
+- Run all tests:
+
+  `npx mocha`
+- Run all tests in parallel and report with very verbose output (to debug tests that don't run):
+  
+  `npx mocha --reporter spec --parallel`
+- Run a specific test (here the SettingsRouter in the backend):
+
+  `npx mocha ./test/backend/integration/routers/admin/SettingsRouter.js`
