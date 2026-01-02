@@ -8,7 +8,7 @@
       <a class="navbar-brand d-none d-sm-block" [routerLink]="['/gallery']"
          [queryParams]="queryService.getParams()">
         <app-icon class="d-inline-block align-top me-1" [width]="30" [height]="30"></app-icon>
-        <strong class="d-none d-lg-inline-block">{{title}}</strong>
+        <strong class="d-none d-lg-inline-block">{{ title }}</strong>
       </a>
       <div class="collapse navbar-collapse text-center" id="navbarCollapse" [collapse]="collapsed">
         <ul class="navbar-nav mb-0 me-2 text-lg-start d-none d-md-flex">
@@ -25,11 +25,11 @@
                  [queryParams]="queryService.getParams()" [class.active]="isLinkActive('/gallery')" i18n>Gallery</a>
             </li>
             <li class="nav-item" *ngIf="link.type === NavigationLinkTypes.url && isCustomLinksAvailable()">
-              <a class="nav-link" [href]="link.url" [class.active]="isLinkActive(link.url)">{{link.name}}</a>
+              <a class="nav-link" [href]="link.url" [class.active]="isLinkActive(link.url)">{{ link.name }}</a>
             </li>
             <li class="nav-item" *ngIf="link.type === NavigationLinkTypes.search && isCustomLinksAvailable()">
               <a class="nav-link" [routerLink]="['/search', link.SearchQuery | json]"
-                 [class.active]="isSearchActive(link.SearchQuery)">{{link.name}}</a>
+                 [class.active]="isSearchActive(link.SearchQuery)">{{ link.name }}</a>
             </li>
           </ng-container>
         </ul>
@@ -49,7 +49,7 @@
             <ng-container *ngIf="authenticationRequired && user.value">
               <li class="nav-item me-2 ms-2 navbar-text d-xl-block d-none">
              <span style="white-space: nowrap;">
-               <ng-icon name="ionPersonOutline" class="me-1"></ng-icon><span>{{user.value.name}}</span>
+               <ng-icon name="ionPersonOutline" class="me-1"></ng-icon><span>{{ user.value.name }}</span>
               </span>
               </li>
               <li class="nav-item divider-vertical  d-xl-block d-none">
@@ -70,9 +70,10 @@
                         aria-controls="dropdown-frame-menu">
                   <ng-icon class="align-text-top" size="1.2em" name="ionMenuOutline"></ng-icon>
                   <span *ngIf="isAdmin() && notificationService.numberOfNotifications>0"
-                        class="navbar-badge badge text-bg-warning">{{notificationService.numberOfNotifications}}</span>
+                        class="navbar-badge badge text-bg-warning">{{ notificationService.numberOfNotifications }}</span>
                 </button>
                 <ul id="dropdown-frame-menu" *dropdownMenu
+                    #dropdownMenu
                     class="dropdown-menu dropdown-menu-right"
                     role="menu" aria-labelledby="button-frame-menu">
 
@@ -80,7 +81,7 @@
                     <div style="white-space: nowrap;" class="dropdown-item">
                       <ng-container *ngIf="authenticationRequired && user.value">
                         <ng-icon name="ionPersonOutline"></ng-icon>
-                        <span>{{user.value.name}}</span>
+                        <span>{{ user.value.name }}</span>
                       </ng-container>
                       <app-language class="navbar-btn d-inline-block float-end"></app-language>
                     </div>
@@ -136,26 +137,28 @@
                     <li class="nav-item d-md-none" *ngIf="link.type === NavigationLinkTypes.url">
                       <a class="dropdown-item" [href]="link.url" [class.active]="isLinkActive(link.url)">
                         <ng-icon name="ionLinkOutline"></ng-icon>
-                        <span>{{link.name}}</span>
+                        <span>{{ link.name }}</span>
                       </a>
                     </li>
                     <li class="nav-item d-md-none" *ngIf="link.type === NavigationLinkTypes.search">
                       <a class="dropdown-item" [routerLink]="['/search', link.SearchQuery | json]"
                          [class.active]="isSearchActive(link.SearchQuery)">
                         <ng-icon name="ionSearchOutline"></ng-icon>
-                        <span>{{link.name}}</span>
+                        <span>{{ link.name }}</span>
                       </a>
                     </li>
                   </ng-container>
                   <hr class="d-md-none"/>
 
-                  <li role="menuitem" dropdown [autoClose]="false"
+                  <li role="button" dropdown [autoClose]="false"
                       placement="bottom left" container="body">
-                    <a dropdownToggle class="dropdown-item">
+                    <a dropdownToggle class="dropdown-item cursor-pointer">
                       <ng-icon name="ionHammerOutline"></ng-icon>
                       <ng-container i18n>Tools</ng-container>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-start" *dropdownMenu role="menu">
+                    <ul class="dropdown-menu"
+                        [style.right.px]="-dropdownMenu.clientWidth"
+                        *dropdownMenu role="menu">
                       <ng-content select="[navbar-menu]"></ng-content>
                       <li role="menuitem" *ngIf="isAdmin()">
                         <a class="dropdown-item"
@@ -177,13 +180,37 @@
                           </div>
                         </div>
                       </li>
+                      <li role="menuitem">
+                        <div class="dropdown-item d-flex justify-content-between">
+                          <span title="Automatically shows new photos and videos" i18n-title
+                                i18n>Auto update gallery</span>
+                          <div class="form-check form-switch">
+                            <select
+                              class="form-select d-inline-block w-auto"
+                              id="autopoll-interval-select"
+                              [(ngModel)]="galleryService.autoPollInterval">
+                              <option [ngValue]="0">off</option>
+                              <option [ngValue]="5">5s</option>
+                              <option [ngValue]="10">10s</option>
+                              <option [ngValue]="30">30s</option>
+                              <option [ngValue]="60">1m</option>
+                              <option [ngValue]="120">2m</option>
+                              <option [ngValue]="300">5m</option>
+                              <option [ngValue]="600">10m</option>
+                              <option [ngValue]="1800">30m</option>
+                              <option [ngValue]="3600">1h</option>
+                              <option [ngValue]="7200">2h</option>
+                            </select>
+                          </div>
+                        </div>
+                      </li>
                     </ul>
                   </li>
                   <li role="menuitem" *ngIf="isAdmin()">
                     <a class="dropdown-item" [routerLink]="['/admin']">
                       <ng-icon name="ionSettingsOutline"></ng-icon>
                       <span *ngIf="notificationService.numberOfNotifications>0"
-                            class="badge rounded-pill position-absolute p-0 text-bg-warning">{{notificationService.numberOfNotifications}}</span>
+                            class="badge rounded-pill position-absolute p-0 text-bg-warning">{{ notificationService.numberOfNotifications }}</span>
                       <ng-container i18n>Settings</ng-container>
                     </a>
                   </li>

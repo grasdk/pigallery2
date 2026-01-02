@@ -22,6 +22,8 @@ const {imageSizeFromFile} = require('image-size/fromFile');
 const LOG_TAG = '[MetadataLoader]';
 const ffmpeg = FFmpegFactory.get();
 
+sharp.cache(false);
+
 export class MetadataLoader {
 
   private static readonly EMPTY_METADATA: PhotoMetadata = {
@@ -610,6 +612,7 @@ export class MetadataLoader {
           box.left = Math.round(Math.max(0, box.left - box.width / 2));
           box.top = Math.round(Math.max(0, box.top - box.height / 2));
 
+          name = Utils.decodeHTMLChars(name);
 
           faces.push({name, box});
         }

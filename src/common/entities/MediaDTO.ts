@@ -2,6 +2,7 @@ import {DirectoryPathDTO} from './DirectoryDTO';
 import {PhotoDTO} from './PhotoDTO';
 import {FileDTO} from './FileDTO';
 import {SupportedFormats} from '../SupportedFormats';
+import {Utils} from '../Utils';
 
 export interface MediaDTO extends FileDTO {
   id: number;
@@ -78,12 +79,18 @@ export const MediaDTOUtils = {
   },
 
   calcAspectRatio: (photo: MediaDTO): number => {
-    return (photo.metadata.size.width / photo.metadata.size.height) || 1; // NaN should be treated as square photo
+    return (photo.metadata.size.width / photo.metadata.size.height) || 1; // NaN should be treated as a square photo
   },
 
   equals: (a: MediaDTO, b: MediaDTO): boolean => {
     return a.directory.path === b.directory.path &&
         a.directory.name === b.directory.name &&
         a.name === b.name;
+  },
+  createdThisYear(media: MediaDTO): boolean {
+    return (
+      new Date().getFullYear() ===
+      Utils.getUTCFullYear(media.metadata.creationDate, media.metadata.creationDateOffset)
+    );
   }
 };

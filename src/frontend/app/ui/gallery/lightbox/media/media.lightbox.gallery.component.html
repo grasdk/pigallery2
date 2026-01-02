@@ -12,7 +12,8 @@
        [src]="photo.src"
        [alt]="gridMedia.media.name"
        (load)="onImageLoad()"
-       (error)="onImageError()"/>
+       (error)="onImageError()"
+       #image/>
 
   <video *ngIf="gridMedia !== null && gridMedia.isVideo() && loadMedia"
          [style.width.%]="imageSize.width"

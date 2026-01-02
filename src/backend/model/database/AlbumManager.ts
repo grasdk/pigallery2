@@ -1,6 +1,5 @@
 import {SQLConnection} from './SQLConnection';
 import {AlbumBaseEntity} from './enitites/album/AlbumBaseEntity';
-import {AlbumBaseDTO} from '../../../common/entities/album/AlbumBaseDTO';
 import {ObjectManagers} from '../ObjectManagers';
 import {SearchQueryDTO} from '../../../common/entities/SearchQueryDTO';
 import {SavedSearchEntity} from './enitites/album/SavedSearchEntity';
@@ -8,6 +7,8 @@ import {Logger} from '../../Logger';
 import {SessionContext} from '../SessionContext';
 import {ProjectedAlbumCacheEntity} from './enitites/album/ProjectedAlbumCacheEntity';
 import {ProjectionAwareManager} from './ProjectionAwareManager';
+import {NotificationManager} from '../NotifocationManager';
+import {Job} from '../jobs/jobs/Job';
 
 const LOG_TAG = '[AlbumManager]';
 
@@ -26,6 +27,7 @@ export class AlbumManager extends ProjectionAwareManager<AlbumBaseEntity> {
       return;
     }
     await this.addSavedSearch(name, searchQuery, lockedAlbum);
+    this.resetMemoryCache();
   }
 
   public async addSavedSearch(
@@ -37,27 +39,41 @@ export class AlbumManager extends ProjectionAwareManager<AlbumBaseEntity> {
     await connection
       .getRepository(SavedSearchEntity)
       .save({name, searchQuery, locked: lockedAlbum});
+    this.resetMemoryCache();
   }
 
   public async deleteAlbum(id: number): Promise<void> {
     const connection = await SQLConnection.getConnection();
+    const albumCount = await connection
+      .getRepository(AlbumBaseEntity)
+      .countBy({id, locked: false});
 
-    if (
-      (await connection
-        .getRepository(AlbumBaseEntity)
-        .countBy({id, locked: false})) !== 1
-    ) {
-      throw new Error('Could not delete album, id:' + id);
+    if (albumCount == 0) {
+      throw new Error(`Could not delete album, id: ${id}. Album id is not found or the album is locked.`);
+    }
+
+    if (albumCount > 1) {
+      throw new Error(`Could not delete album, id: ${id}. DB is inconsistent. More than one album is found with the given id.`);
     }
 
     await connection
       .getRepository(AlbumBaseEntity)
       .delete({id, locked: false});
+
+    this.resetMemoryCache();
   }
 
+  async deleteAll() {
+    const connection = await SQLConnection.getConnection();
+    await connection
+      .getRepository(AlbumBaseEntity)
+      .createQueryBuilder('album')
+      .delete()
+      .execute();
+    this.resetMemoryCache();
+  }
 
   protected async loadEntities(session: SessionContext): Promise<AlbumBaseEntity[]> {
-    Logger.debug(LOG_TAG, 'loadEntities called for projection key:', session.user.projectionKey);
     await this.updateAlbums(session);
     const connection = await SQLConnection.getConnection();
 
@@ -71,7 +87,6 @@ export class AlbumManager extends ProjectionAwareManager<AlbumBaseEntity> {
       .select(['album', 'cache', 'cover.name', 'directory.name', 'directory.path'])
       .getMany();
 
-    Logger.debug(LOG_TAG, 'loadEntities returning', result.length, 'albums');
     return result;
   }
 
@@ -85,15 +100,6 @@ export class AlbumManager extends ProjectionAwareManager<AlbumBaseEntity> {
       .execute();
   }
 
-  async deleteAll() {
-    const connection = await SQLConnection.getConnection();
-    await connection
-      .getRepository(AlbumBaseEntity)
-      .createQueryBuilder('album')
-      .delete()
-      .execute();
-  }
-
   private async updateAlbums(session: SessionContext): Promise<void> {
     Logger.debug(LOG_TAG, 'Updating derived album data');
     const connection = await SQLConnection.getConnection();
@@ -104,18 +110,30 @@ export class AlbumManager extends ProjectionAwareManager<AlbumBaseEntity> {
       .getMany();
 
     for (const a of albums) {
-      if (a.cache?.valid === true) {
-        continue;
-      }
-      await ObjectManagers.getInstance().ProjectedCacheManager
-        .setAndGetCacheForAlbum(connection, session, {
+      try {
+        if (a.cache?.valid === true) {
+          continue;
+        }
+        await ObjectManagers.getInstance().ProjectedCacheManager
+          .setAndGetCacheForAlbum(connection, session, {
+            id: a.id,
+            searchQuery: a.searchQuery,
+            name: a.name
+          });
+        // giving back the control to the main event loop (Macrotask queue)
+        // https://blog.insiderattack.net/promises-next-ticks-and-immediates-nodejs-event-loop-part-3-9226cbe7a6aa
+        await new Promise(setImmediate);
+      } catch (e) {
+        Logger.error(LOG_TAG, `Could not update album data for album '${a.name}', query: ${JSON.stringify(a.searchQuery)}`, e);
+        NotificationManager.warning(`Could not update album data`, {
           id: a.id,
-          searchQuery: a.searchQuery
+          searchQuery: a.searchQuery,
+          name: a.name,
+          error: e.toString()
         });
-      // giving back the control to the main event loop (Macrotask queue)
-      // https://blog.insiderattack.net/promises-next-ticks-and-immediates-nodejs-event-loop-part-3-9226cbe7a6aa
-      await new Promise(setImmediate);
+      }
     }
+    this.resetMemoryCache();
   }
 
 }

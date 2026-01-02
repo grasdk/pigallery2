@@ -5,13 +5,13 @@ import {DomSanitizer, SafeStyle} from '@angular/platform-browser';
 import {SupportedFormats} from '../../../../../../common/SupportedFormats';
 import {Config} from '../../../../../../common/config/public/Config';
 import {LightboxService} from '../lightbox.service';
-import { NgIf } from '@angular/common';
+import {NgIf} from '@angular/common';
 
 @Component({
-    selector: 'app-gallery-lightbox-media',
-    styleUrls: ['./media.lightbox.gallery.component.css'],
-    templateUrl: './media.lightbox.gallery.component.html',
-    imports: [NgIf]
+  selector: 'app-gallery-lightbox-media',
+  styleUrls: ['./media.lightbox.gallery.component.css'],
+  templateUrl: './media.lightbox.gallery.component.html',
+  imports: [NgIf]
 })
 export class GalleryLightboxMediaComponent implements OnChanges {
   @Input() gridMedia: GridMedia;
@@ -23,11 +23,11 @@ export class GalleryLightboxMediaComponent implements OnChanges {
   @Output() videoSourceError = new EventEmitter();
 
   @ViewChild('video', {static: false}) video: ElementRef<HTMLVideoElement>;
+  @ViewChild('image', {static: false}) imageElement: ElementRef<HTMLImageElement>;
 
   prevGirdPhoto: GridMedia = null;
 
   public imageSize = {width: 'auto', height: '100'};
-  private nextImage = new Image();
   // do not skip to the next photo if not both are loaded (or resulted in an error)
   public imageLoadFinished = {
     this: false,
@@ -39,6 +39,7 @@ export class GalleryLightboxMediaComponent implements OnChanges {
     isBestFit: null as boolean,
   };
   public transcodeNeedVideos = SupportedFormats.TranscodeNeed.Videos;
+  private nextImage = new Image();
   // if media not loaded, show thumbnail
   private mediaLoaded = false;
   private videoProgress = 0;
@@ -119,6 +120,26 @@ export class GalleryLightboxMediaComponent implements OnChanges {
     return null;
   }
 
+  public isRenderedMediaLoaded(): boolean {
+    if (!this.gridMedia) {
+      return false;
+    }
+    if (this.gridMedia.isVideo()) {
+      return !!this.video && this.video.nativeElement.readyState >= 3; // HAVE_FUTURE_DATA
+    }
+    if (this.gridMedia.isPhoto()) {
+      return this.imageLoadFinished.this || (this.imageElement && this.imageElement.nativeElement.complete);
+    }
+    return false;
+  }
+
+  public isNextMediaLoaded(): boolean {
+    if (!this.nextGridMedia || !this.nextGridMedia.isPhoto()) {
+      return true;
+    }
+    return this.imageLoadFinished.next || this.nextImage.complete;
+  }
+
   ngOnChanges(): void {
     // media changed
     if (this.prevGirdPhoto !== this.gridMedia) {
@@ -196,6 +217,12 @@ export class GalleryLightboxMediaComponent implements OnChanges {
     this.videoSourceError.emit();
   }
 
+  public onVideoProgress(): void {
+    this.videoProgress =
+      (100 / this.video.nativeElement.duration) *
+      this.video.nativeElement.currentTime;
+  }
+
   /**
    * Loads next photo to faster show it on navigation.
    * Called after the current photo is loaded
@@ -265,12 +292,6 @@ export class GalleryLightboxMediaComponent implements OnChanges {
       this.photo.src = this.gridMedia.getOriginalMediaPath();
       this.photo.isBestFit = false;
     }
-  }
-
-  public onVideoProgress(): void {
-    this.videoProgress =
-      (100 / this.video.nativeElement.duration) *
-      this.video.nativeElement.currentTime;
   }
 
   private setImageSize(): void {

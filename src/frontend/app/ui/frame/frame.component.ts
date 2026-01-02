@@ -10,43 +10,44 @@ import {NavigationLinkTypes, ScrollUpModes, ThemeModes} from '../../../../common
 import {SearchQueryDTO} from '../../../../common/entities/SearchQueryDTO';
 import {Utils} from '../../../../common/Utils';
 import {PageHelper} from '../../model/page.helper';
-import { BsDropdownDirective, BsDropdownToggleDirective, BsDropdownMenuDirective } from 'ngx-bootstrap/dropdown';
+import {BsDropdownConfig, BsDropdownDirective, BsDropdownMenuDirective, BsDropdownToggleDirective} from 'ngx-bootstrap/dropdown';
 import {LanguageComponent} from '../language/language.component';
 import {ThemeService} from '../../model/theme.service';
 import {DeviceDetectorService} from 'ngx-device-detector';
-import { LoadingBarModule } from '@ngx-loading-bar/core';
-import { IconComponent } from '../../icon.component';
-import { CollapseDirective } from 'ngx-bootstrap/collapse';
-import { NgFor, NgIf, NgSwitch, NgSwitchCase, JsonPipe } from '@angular/common';
-import { GallerySearchComponent } from '../gallery/search/search.gallery.component';
-import { GalleryShareComponent } from '../gallery/share/share.gallery.component';
-import { NgIconComponent } from '@ng-icons/core';
-import { FormsModule } from '@angular/forms';
+import {LoadingBarModule} from '@ngx-loading-bar/core';
+import {IconComponent} from '../../icon.component';
+import {CollapseDirective} from 'ngx-bootstrap/collapse';
+import {JsonPipe, NgFor, NgIf, NgSwitch, NgSwitchCase} from '@angular/common';
+import {GallerySearchComponent} from '../gallery/search/search.gallery.component';
+import {GalleryShareComponent} from '../gallery/share/share.gallery.component';
+import {NgIconComponent} from '@ng-icons/core';
+import {FormsModule} from '@angular/forms';
+import {GalleryService} from '../gallery/gallery.service';
 
 @Component({
-    selector: 'app-frame',
-    templateUrl: './frame.component.html',
-    styleUrls: ['./frame.component.css'],
-    encapsulation: ViewEncapsulation.Emulated,
-    imports: [
-        LoadingBarModule,
-        RouterLink,
-        IconComponent,
-        CollapseDirective,
-        NgFor,
-        NgIf,
-        GallerySearchComponent,
-        GalleryShareComponent,
-        NgIconComponent,
-        LanguageComponent,
-        BsDropdownDirective,
-        BsDropdownToggleDirective,
-        BsDropdownMenuDirective,
-        NgSwitch,
-        NgSwitchCase,
-        FormsModule,
-        JsonPipe,
-    ]
+  selector: 'app-frame',
+  templateUrl: './frame.component.html',
+  styleUrls: ['./frame.component.css'],
+  encapsulation: ViewEncapsulation.Emulated,
+  imports: [
+    LoadingBarModule,
+    RouterLink,
+    IconComponent,
+    CollapseDirective,
+    NgFor,
+    NgIf,
+    GallerySearchComponent,
+    GalleryShareComponent,
+    NgIconComponent,
+    LanguageComponent,
+    BsDropdownDirective,
+    BsDropdownToggleDirective,
+    BsDropdownMenuDirective,
+    NgSwitch,
+    NgSwitchCase,
+    FormsModule,
+    JsonPipe,
+  ],
 })
 export class FrameComponent {
   @Input() showSearch = false;
@@ -60,31 +61,31 @@ export class FrameComponent {
   public readonly stringify = JSON.stringify;
   public readonly themesEnabled = Config.Gallery.Themes.enabled;
   public readonly svgIcon = Config.Server.svgIcon;
-
+  public shouldHideNavbar = false;
+  public navbarKeepTop = true;
+  public animateNavbar = false;
+  public fixNavbarOnTop = false;
+  @ViewChild('dropdownMenu', {static: true}) dropdownMenu: ElementRef;
+  @ViewChild('navContainer', {static: true}) navContainer: ElementRef;
+  @ViewChild('dropdown', {static: true}) dropdown: BsDropdownDirective;
+  @ViewChild('languageSelector', {static: true}) languageSelector: LanguageComponent;
+  ThemeModes = ThemeModes;
+  public readonly enableScrollUpButton: boolean;
   /* sticky top navbar */
   private lastScroll = {
     any: 0,
     up: 0,
     down: 0
   };
-  public shouldHideNavbar = false;
-  public navbarKeepTop = true;
-  public animateNavbar = false;
-  public fixNavbarOnTop = false;
-  @ViewChild('navContainer', {static: true}) navContainer: ElementRef;
-  @ViewChild('dropdown', {static: true}) dropdown: BsDropdownDirective;
-  @ViewChild('languageSelector', {static: true}) languageSelector: LanguageComponent;
-
-  ThemeModes = ThemeModes;
-  public readonly enableScrollUpButton: boolean;
 
   constructor(
-      private authService: AuthenticationService,
-      public notificationService: NotificationService,
-      public queryService: QueryService,
-      private router: Router,
-      public themeService: ThemeService,
-      private deviceService: DeviceDetectorService
+    private authService: AuthenticationService,
+    public notificationService: NotificationService,
+    public queryService: QueryService,
+    private router: Router,
+    public themeService: ThemeService,
+    private deviceService: DeviceDetectorService,
+    public galleryService: GalleryService
   ) {
     this.enableScrollUpButton = Config.Gallery.NavBar.showScrollUpButton === ScrollUpModes.always || (Config.Gallery.NavBar.showScrollUpButton === ScrollUpModes.mobileOnly && !this.deviceService.isDesktop());
     this.user = this.authService.user;
@@ -135,7 +136,7 @@ export class FrameComponent {
   isAlbumsAvailable(): boolean {
     return Config.Album.enabled &&
       this.user.value &&
-      this.user.value.role >= Config.Album.readAccessMinRole
+      this.user.value.role >= Config.Album.readAccessMinRole;
   }
 
 

@@ -3,7 +3,7 @@ import {NetworkService} from '../../../model/network/network.service';
 import {FileDTO} from '../../../../../common/entities/FileDTO';
 import {Utils} from '../../../../../common/Utils';
 import {ContentService} from '../content.service';
-import {mergeMap, Observable, shareReplay} from 'rxjs';
+import {map, mergeMap, Observable, shareReplay} from 'rxjs';
 import {MDFilesFilterPipe} from '../../../pipes/MDFilesFilterPipe';
 import {MDFileDTO} from '../../../../../common/entities/MDFileDTO';
 import {Config} from '../../../../../common/config/public/Config';
@@ -37,6 +37,17 @@ export class BlogService {
 
         return (await Promise.all(files)).flat();
       }), shareReplay(1));
+  }
+
+  getMarkDowns(date: Date): Observable<GroupedMarkdown[]> {
+    const utcDate = date ? date.getTime() : undefined;
+    return this.groupedMarkdowns.pipe(map(gm => {
+      if (!date) {
+        return gm.filter(g => !g.date);
+      }
+      return gm.filter(g => g.date == utcDate);
+    }));
+
   }
 
   /**

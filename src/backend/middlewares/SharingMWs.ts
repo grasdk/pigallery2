@@ -104,7 +104,7 @@ export class SharingMWs {
       // Prefer provided searchQuery; otherwise fallback to strict directory exact-match query for compatibility
       const searchQuery = createSharing.searchQuery || ({
         type: SearchQueryTypes.directory,
-        text: directoryName,
+        value: directoryName,
         matchType: TextSearchQueryMatchTypes.exact_match,
         negate: false
       } as TextSearch);
@@ -161,7 +161,7 @@ export class SharingMWs {
 
       const searchQuery = updateSharing.searchQuery || ({
         type: SearchQueryTypes.directory,
-        text: directoryName,
+        value: directoryName,
         matchType: TextSearchQueryMatchTypes.exact_match,
         negate: false
       } as TextSearch);

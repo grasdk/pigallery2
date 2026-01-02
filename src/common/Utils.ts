@@ -30,7 +30,7 @@ export class Utils {
       return obj;
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if((obj as any)._____removeNullOrEmptyObjvisiting){
+    if ((obj as any)._____removeNullOrEmptyObjvisiting) {
       throw new Error('Recursive call detected');
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -380,26 +380,7 @@ export class Utils {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public static isValidEnumInt(EnumType: any, value: number) {
-    return typeof EnumType[value] === 'string';
-  }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public static enumToArray(EnumType: any): { key: number; value: string }[] {
-    const arr: { key: number; value: string }[] = [];
-    for (const enumMember in EnumType) {
-      // eslint-disable-next-line no-prototype-builtins
-      if (!EnumType.hasOwnProperty(enumMember)) {
-        continue;
-      }
-      const key = parseInt(enumMember, 10);
-      if (key >= 0) {
-        arr.push({key, value: EnumType[enumMember]});
-      }
-    }
-    return arr;
-  }
 
   public static findClosest(num: number, arr: number[]): number {
     let curr = arr[0];
@@ -534,6 +515,65 @@ export class Utils {
 
     // Fallback to the full name
     return filename;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public static enumToArray(EnumType: any): { key: number; value: string }[] {
+    const arr: { key: number; value: string }[] = [];
+    for (const enumMember in EnumType) {
+      // eslint-disable-next-line no-prototype-builtins
+      if (!EnumType.hasOwnProperty(enumMember)) {
+        continue;
+      }
+      const key = parseInt(enumMember, 10);
+      if (key >= 0) {
+        arr.push({key, value: EnumType[enumMember]});
+      }
+    }
+    return arr;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public static isValidEnumInt(EnumType: any, value: number) {
+    return typeof EnumType[value] === 'string';
+  }
+
+
+  // Generic enum array parser: accepts comma-separated string or string[] and maps to enum numeric values
+  // IMPORTANT: Only string names are accepted; numeric values are ignored.
+  // Matching is case-insensitive. Invalid entries are ignored.
+  public static parseEnumArray<T extends Record<string, number>>(param: string | string[], enumType: T): number[] {
+    const values: string[] = Array.isArray(param) ? param : String(param).split(',');
+    const out: number[] = [];
+    for (const raw of values) {
+      if (raw === undefined || raw === null || raw.trim() === '') {
+        continue;
+      }
+      const trimmed = raw.trim();
+      // try by name (case-insensitive)
+      const key: string = Object.keys(enumType).find(k => isNaN(Number(k)) && k.toLowerCase() === trimmed.toLowerCase());
+      if (key) {
+        const val: number = enumType[key];
+        if (typeof val === 'number') {
+          out.push(val);
+        }
+      }
+    }
+    return out;
+  }
+
+  // Serialize LightBoxTitleTexts values to a canonical comma-separated list of enum key names (lowercase)
+  public static serializeEnumNames(values: number[], enumType: Record<number, string>): string {
+    if (!values || values.length === 0) {
+      return '';
+    }
+    const toName = (v: number) => {
+      const name = enumType[v];
+      return typeof name === 'string' ? name.toLowerCase() : '';
+    };
+    return (values as number[])
+      .map(v => toName(v))
+      .filter(s => s && s.length > 0)
+      .join(',');
   }
 }
 

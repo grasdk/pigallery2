@@ -25,7 +25,7 @@ describe('DiskMangerWorker', () => {
     const dir = await DiskManager.scanDirectory('/');
     // should match the number of media (photo/video) files in the assets folder
     // TODO: make this test less flaky. Every time a new image is added to the folder, it fails.
-    expect(dir.media.length).to.be.equals(17);
+    expect(dir.media.length).to.be.equals(18);
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const expected = require(path.join(__dirname, '/../../../assets/test image öüóőúéáű-.,.json'));
     const i = dir.media.findIndex(m => m.name === 'test image öüóőúéáű-.,.jpg');

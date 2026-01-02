@@ -32,7 +32,7 @@ export class GallerySearchQueryBuilderComponent
     implements ControlValueAccessor, Validator {
   public searchQueryDTO: SearchQueryDTO = {
     type: SearchQueryTypes.any_text,
-    text: '',
+    value: '',
   } as TextSearch;
   @Output() search = new EventEmitter<void>();
   @Input() placeholder = $localize`Search`;
@@ -59,7 +59,7 @@ export class GallerySearchQueryBuilderComponent
 
   resetQuery(): void {
     this.searchQueryDTO = {
-      text: '',
+      value: '',
       type: SearchQueryTypes.any_text,
     } as TextSearch;
     this.onChange();

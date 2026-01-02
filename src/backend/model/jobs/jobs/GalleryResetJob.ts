@@ -8,6 +8,11 @@ export class GalleryRestJob extends Job {
   public readonly ConfigTemplate: DynamicConfig[] = null;
   protected readonly IsInstant = true;
 
+
+  get LOG_TAG(): string {
+    return '[GalleryRestJob]';
+  }
+
   public get Supported(): boolean {
     return true;
   }

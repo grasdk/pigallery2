@@ -95,6 +95,11 @@ describe('MetadataLoader', () => {
     const expected = require(path.join(__dirname, '/../../../assets/old_photo.json'));
     expect(Utils.clone(data)).to.be.deep.equal(expected);
   });
+  it('should load special names', async () => {
+    const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/special_names.jpg'));
+    const expected = require(path.join(__dirname, '/../../../assets/special_names.json'));
+    expect(Utils.clone(data)).to.be.deep.equal(expected);
+  });
   it('should load jpg with special characters', async () => {
     const data = await MetadataLoader.loadPhotoMetadata(path.join(__dirname, '/../../../assets/Chars.jpg'));
     const expected = require(path.join(__dirname, '/../../../assets/Chars.json'));

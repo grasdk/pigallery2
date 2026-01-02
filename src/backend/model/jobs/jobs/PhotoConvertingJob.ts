@@ -31,6 +31,11 @@ export class PhotoConvertingJob extends FileJob<{
     });
   }
 
+  get LOG_TAG(): string {
+    return '[PhotoConvertingJob]';
+  }
+
+
   public get Supported(): boolean {
     return true;
   }

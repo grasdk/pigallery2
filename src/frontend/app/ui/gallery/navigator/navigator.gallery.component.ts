@@ -105,7 +105,7 @@ export class GalleryNavigatorComponent {
           } else {
             // Handle exact directory search
             const searchQuery = c?.searchResult.searchQuery as TextSearch;
-            path = searchQuery.text.replace(/^\.\//, ''); // Remove leading ./ if present
+            path = searchQuery.value.replace(/^\.\//, ''); // Remove leading ./ if present
             const lastSlashIndex = path.lastIndexOf('/');
             if (lastSlashIndex !== -1) {
               name = path.substring(lastSlashIndex + 1);
@@ -265,7 +265,7 @@ export class GalleryNavigatorComponent {
       searchQuery = {
         type: SearchQueryTypes.directory,
         matchType: TextSearchQueryMatchTypes.exact_match,
-        text: Utils.concatUrls('./', c?.directory.path, c?.directory.name)
+        value: Utils.concatUrls('./', c?.directory.path, c?.directory.name)
       } as TextSearch;
     } else {
       return null;
@@ -293,7 +293,7 @@ export class GalleryNavigatorComponent {
     return JSON.stringify({
       type: SearchQueryTypes.directory,
       matchType: TextSearchQueryMatchTypes.like,
-      text: Utils.concatUrls('./', c?.directory.path, c?.directory.name),
+      value: Utils.concatUrls('./', c?.directory.path, c?.directory.name),
     } as TextSearch);
   }
 

@@ -165,15 +165,15 @@ export class BenchmarkRunner {
     // searching for everything
     queries.push({
       query: {
-        type: SearchQueryTypes.any_text, text: '.'
+        type: SearchQueryTypes.any_text, value: '.'
       } as TextSearch, description: queryParser.stringify({
-        type: SearchQueryTypes.any_text, text: '.'
+        type: SearchQueryTypes.any_text, value: '.'
       } as TextSearch)
     });
     if (names.length > 0) {
       queries.push({
         query: {
-          type: SearchQueryTypes.person, text: names[0].name,
+          type: SearchQueryTypes.person, value: names[0].name,
           matchType: TextSearchQueryMatchTypes.exact_match
         } as TextSearch, description: '<Most common name>'
       });
@@ -183,11 +183,11 @@ export class BenchmarkRunner {
         query: {
           type: SearchQueryTypes.AND, list: [
             {
-              type: SearchQueryTypes.person, text: names[0].name,
+              type: SearchQueryTypes.person, value: names[0].name,
               matchType: TextSearchQueryMatchTypes.exact_match
             } as TextSearch,
             {
-              type: SearchQueryTypes.person, text: names[1].name,
+              type: SearchQueryTypes.person, value: names[1].name,
               matchType: TextSearchQueryMatchTypes.exact_match
             } as TextSearch
           ]
@@ -197,11 +197,11 @@ export class BenchmarkRunner {
         query: {
           type: SearchQueryTypes.OR, list: [
             {
-              type: SearchQueryTypes.person, text: names[0].name,
+              type: SearchQueryTypes.person, value: names[0].name,
               matchType: TextSearchQueryMatchTypes.exact_match
             } as TextSearch,
             {
-              type: SearchQueryTypes.person, text: names[1].name,
+              type: SearchQueryTypes.person, value: names[1].name,
               matchType: TextSearchQueryMatchTypes.exact_match
             } as TextSearch
           ]
@@ -212,7 +212,7 @@ export class BenchmarkRunner {
           type: SearchQueryTypes.SOME_OF,
           min: 2,
           list: names.map(n => ({
-            type: SearchQueryTypes.person, text: n.name,
+            type: SearchQueryTypes.person, value: n.name,
             matchType: TextSearchQueryMatchTypes.exact_match
           } as TextSearch))
         } as SomeOfSearchQuery, description: '<Contain at least 2 out of all names>'

@@ -7,14 +7,14 @@ export class OverlayService {
   OnOverlayChange = new Event<boolean>();
   private scrollWidth: number = null;
 
-  public showOverlay(): void {
+  public showOverlay(requester:string): void {
     // disable scrolling
-    PageHelper.hideScrollY();
+    PageHelper.hideScrollY(requester);
     this.OnOverlayChange.trigger(true);
   }
 
-  public hideOverlay(): void {
-    PageHelper.showScrollY();
+  public hideOverlay(requester:string): void {
+    PageHelper.showScrollY(requester);
     this.OnOverlayChange.trigger(false);
   }
 

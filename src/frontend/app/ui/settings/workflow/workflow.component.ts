@@ -340,7 +340,7 @@ export class WorkflowComponent implements ControlValueAccessor, Validator, OnIni
 
   AddNewMediaPickDTO(configElement: string | number | string[] | number[] | MediaPickDTO[]): void {
     (configElement as MediaPickDTO[]).push({
-      searchQuery: {type: SearchQueryTypes.any_text, text: ''} as TextSearch,
+      searchQuery: {type: SearchQueryTypes.any_text, value: ''} as TextSearch,
       sortBy: [{method: SortByTypes.Rating, ascending: true},
         {method: SortByTypes.PersonCount, ascending: true}],
       pick: 5

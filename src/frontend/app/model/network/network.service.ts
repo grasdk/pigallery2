@@ -113,6 +113,11 @@ export class NetworkService {
           res.headers.get(CustomHeaders.dataVersion)
         );
       }
+      if (res.headers.has(CustomHeaders.appVersion)) {
+        this.versionService.onNewAppVersion(
+          res.headers.get(CustomHeaders.appVersion)
+        );
+      }
       if (msg.error) {
         if (msg.error.code) {
           (msg.error as any).title = ErrorCodes[msg.error.code];

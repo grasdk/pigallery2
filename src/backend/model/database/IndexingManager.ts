@@ -183,6 +183,11 @@ export class IndexingManager {
     });
 
     this.savingQueue.push({dir: scannedDirectory, promise, resolve: resolveFn, reject: rejectFn});
+
+    if (this.savingQueue.length > 100) {
+      Logger.warn(LOG_TAG, 'Saving queue is growing large:', this.savingQueue.length);
+    }
+
     this.runSavingLoop().catch(console.error);
 
     return promise;
@@ -210,21 +215,15 @@ export class IndexingManager {
             remaining.reject(e);
           }
           this.savingQueue = [];
+          this.checkSavingReady();
           throw e;
         }
         this.savingQueue.shift();
       }
     } finally {
-      if (this.savingQueue.length === 0 && this.SavingReady) {
-        const pr = this.SavingReadyPR;
-        this.SavingReady = null;
-        if (pr) {
-          pr();
-        }
-      }
+      this.checkSavingReady();
     }
   }
-
 
   protected async saveParentDir(
     connection: Connection,
@@ -535,6 +534,19 @@ export class IndexingManager {
     await personJunctionTable.remove(indexedFaces, {
       chunk: Math.max(Math.ceil(indexedFaces.length / 500), 1),
     });
+  }
+
+  private checkSavingReady(): void {
+
+    if (!this.savingQueue?.length && this.SavingReady) {
+      const pr = this.SavingReadyPR;
+      this.SavingReady = null;
+      this.SavingReadyPR = null;
+      this.savingQueue = [];
+      if (pr) {
+        pr();
+      }
+    }
   }
 
   private async saveChunk<T extends ObjectLiteral>(

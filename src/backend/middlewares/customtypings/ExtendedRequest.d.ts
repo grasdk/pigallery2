@@ -16,6 +16,10 @@ declare global {
       session: {
         context?: SessionContext;
         rememberMe?: boolean;
+        oidc?: {
+          state: string;
+          verifier: string;
+        }
       };
     }
 

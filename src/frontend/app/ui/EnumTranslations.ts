@@ -1,5 +1,11 @@
 import {UserRoles} from '../../../common/entities/UserDTO';
-import {ConfigPriority, MapProviders, NavigationLinkTypes, ScrollUpModes} from '../../../common/config/public/ClientConfig';
+import {
+  ConfigPriority,
+  LightBoxTitleTexts,
+  MapProviders,
+  NavigationLinkTypes,
+  ScrollUpModes
+} from '../../../common/config/public/ClientConfig';
 import {ReIndexingSensitivity} from '../../../common/config/private/PrivateConfig';
 import {SearchQueryTypes} from '../../../common/entities/SearchQueryDTO';
 import {ConfigStyle} from './settings/settings.service';
@@ -69,19 +75,37 @@ EnumTranslations[NavigationLinkTypes[NavigationLinkTypes.albums]] = $localize`Al
 EnumTranslations[NavigationLinkTypes[NavigationLinkTypes.faces]] = $localize`Faces`;
 
 
+// Lightbox title text options
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.NONE]] = $localize`None`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.file]] = $localize`File`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.resolution]] = $localize`Resolution`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.size]] = $localize`Size`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.caption]] = $localize`Caption`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.title]] = $localize`Title`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.keywords]] = $localize`Keywords`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.persons]] = $localize`Persons`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.location]] = $localize`Location`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.date]] = $localize`Date`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.camera]] = $localize`Camera`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.lens]] = $localize`Lens`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.iso]] = $localize`Iso`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.fstop]] = $localize`f-stop`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.focal_length]] = $localize`Focal length`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.directory]] = $localize`Directory`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.titleOrCaption]] = $localize`Title or Caption`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.titleOrDirectory]] = $localize`Title or Directory`;
+EnumTranslations[LightBoxTitleTexts[LightBoxTitleTexts.titleOrCaptionOrDirectory]] = $localize`Title or Caption or Directory`;
+
+
 EnumTranslations[SearchQueryTypes[SearchQueryTypes.AND]] = $localize`And`;
 EnumTranslations[SearchQueryTypes[SearchQueryTypes.OR]] = $localize`Or`;
 EnumTranslations[SearchQueryTypes[SearchQueryTypes.SOME_OF]] = $localize`Some of`;
 EnumTranslations[SearchQueryTypes[SearchQueryTypes.any_text]] = $localize`Any text`;
-EnumTranslations[SearchQueryTypes[SearchQueryTypes.from_date]] = $localize`From`;
-EnumTranslations[SearchQueryTypes[SearchQueryTypes.to_date]] = $localize`Until`;
+EnumTranslations[SearchQueryTypes[SearchQueryTypes.date]] = $localize`Date`;
 EnumTranslations[SearchQueryTypes[SearchQueryTypes.distance]] = $localize`Distance`;
-EnumTranslations[SearchQueryTypes[SearchQueryTypes.min_rating]] = $localize`Min rating`;
-EnumTranslations[SearchQueryTypes[SearchQueryTypes.max_rating]] = $localize`Max rating`;
-EnumTranslations[SearchQueryTypes[SearchQueryTypes.min_person_count]] = $localize`Min faces`;
-EnumTranslations[SearchQueryTypes[SearchQueryTypes.max_person_count]] = $localize`Max faces`;
-EnumTranslations[SearchQueryTypes[SearchQueryTypes.min_resolution]] = $localize`Min resolution`;
-EnumTranslations[SearchQueryTypes[SearchQueryTypes.max_resolution]] = $localize`Max resolution`;
+EnumTranslations[SearchQueryTypes[SearchQueryTypes.rating]] = $localize`Rating`;
+EnumTranslations[SearchQueryTypes[SearchQueryTypes.person_count]] = $localize`Person count`;
+EnumTranslations[SearchQueryTypes[SearchQueryTypes.resolution]] = $localize`Resolution`;
 EnumTranslations[SearchQueryTypes[SearchQueryTypes.directory]] = $localize`Directory`;
 EnumTranslations[SearchQueryTypes[SearchQueryTypes.file_name]] = $localize`File name`;
 EnumTranslations[SearchQueryTypes[SearchQueryTypes.caption]] = $localize`Caption`;

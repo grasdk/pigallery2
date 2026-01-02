@@ -9,6 +9,7 @@ import {Config} from '../../../../../common/config/public/Config';
 import {SearchQueryTypes, TextSearch, TextSearchQueryMatchTypes,} from '../../../../../common/entities/SearchQueryDTO';
 import { NgIf } from '@angular/common';
 import { NgIconComponent } from '@ng-icons/core';
+import {SearchQueryUtils} from '../../../../../common/SearchQueryUtils';
 
 @Component({
     selector: 'app-face',
@@ -44,9 +45,9 @@ export class FaceComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.thumbnail = this.thumbnailService.getPersonThumbnail(this.person);
-    this.searchQueryDTOstr = JSON.stringify({
+    this.searchQueryDTOstr = SearchQueryUtils.urlify({
       type: SearchQueryTypes.person,
-      text: this.person.name,
+      value: this.person.name,
       matchType: TextSearchQueryMatchTypes.exact_match,
     } as TextSearch);
   }

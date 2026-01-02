@@ -191,7 +191,7 @@ export class IconThumbnail extends ThumbnailBase {
 
 export class Thumbnail extends ThumbnailBase {
   constructor(
-      private media: Media,
+      public readonly media: Media,
       thumbnailService: ThumbnailLoaderService,
       autoLoad = true
   ) {

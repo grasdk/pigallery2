@@ -8,6 +8,11 @@ export class AlbumRestJob extends Job {
   public readonly ConfigTemplate: DynamicConfig[] = null;
   protected readonly IsInstant = true;
 
+
+  get LOG_TAG(): string {
+    return '[AlbumRestJob]';
+  }
+
   public get Supported(): boolean {
     return true;
   }

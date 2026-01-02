@@ -56,7 +56,7 @@ describe('SessionManager', (sqlHelper: DBTestHelper) => {
       user.overrideAllowBlockList = true;
       user.allowQuery = {
         type: SearchQueryTypes.directory,
-        text: '/allowed/path',
+        value: '/allowed/path',
         matchType: TextSearchQueryMatchTypes.exact_match
       } as TextSearch;
 
@@ -94,7 +94,7 @@ describe('SessionManager', (sqlHelper: DBTestHelper) => {
       user.overrideAllowBlockList = true;
       user.blockQuery = {
         type: SearchQueryTypes.directory,
-        text: '/blocked/path',
+        value: '/blocked/path',
         matchType: TextSearchQueryMatchTypes.exact_match,
         negate: false
       } as TextSearch;
@@ -139,19 +139,19 @@ describe('SessionManager', (sqlHelper: DBTestHelper) => {
         list:[
           {
             type: SearchQueryTypes.directory,
-            text: '/allowed/path',
+            value: '/allowed/path',
             matchType: TextSearchQueryMatchTypes.exact_match
           } as TextSearch,
           {
             type: SearchQueryTypes.file_name,
-            text: 'photo',
+            value: 'photo',
             matchType: TextSearchQueryMatchTypes.exact_match
           } as TextSearch
         ]
       } as ANDSearchQuery;
       user.blockQuery = {
         type: SearchQueryTypes.directory,
-        text: '/blocked/path',
+        value: '/blocked/path',
         matchType: TextSearchQueryMatchTypes.exact_match,
         negate: false
       } as TextSearch;
@@ -196,7 +196,7 @@ describe('SessionManager', (sqlHelper: DBTestHelper) => {
       user1.overrideAllowBlockList = true;
       user1.allowQuery = {
         type: SearchQueryTypes.directory,
-        text: '/allowed/path',
+        value: '/allowed/path',
         matchType: TextSearchQueryMatchTypes.exact_match
       } as TextSearch;
 
@@ -207,7 +207,7 @@ describe('SessionManager', (sqlHelper: DBTestHelper) => {
       user2.overrideAllowBlockList = true;
       user2.allowQuery = {
         type: SearchQueryTypes.directory,
-        text: '/allowed/path',
+        value: '/allowed/path',
         matchType: TextSearchQueryMatchTypes.exact_match
       } as TextSearch;
       // Mock the SearchManager.prepareAndBuildWhereQuery method
@@ -249,7 +249,7 @@ describe('SessionManager', (sqlHelper: DBTestHelper) => {
       sharing.creator = creator as any;
       sharing.searchQuery = {
         type: SearchQueryTypes.directory,
-        text: '/shared/path',
+        value: '/shared/path',
         matchType: TextSearchQueryMatchTypes.exact_match
       } as TextSearch;
 
@@ -266,7 +266,7 @@ describe('SessionManager', (sqlHelper: DBTestHelper) => {
       creator.overrideAllowBlockList = true;
       creator.allowQuery = {
         type: SearchQueryTypes.directory,
-        text: '/allowed/by/creator',
+        value: '/allowed/by/creator',
         matchType: TextSearchQueryMatchTypes.exact_match
       } as TextSearch;
 
@@ -274,7 +274,7 @@ describe('SessionManager', (sqlHelper: DBTestHelper) => {
       sharing.creator = creator as any;
       sharing.searchQuery = {
         type: SearchQueryTypes.file_name,
-        text: 'holiday',
+        value: 'holiday',
         matchType: TextSearchQueryMatchTypes.exact_match
       } as TextSearch;
 
@@ -294,12 +294,12 @@ describe('SessionManager', (sqlHelper: DBTestHelper) => {
       creator.overrideAllowBlockList = true;
       creator.allowQuery = {
         type: SearchQueryTypes.directory,
-        text: '/allowed',
+        value: '/allowed',
         matchType: TextSearchQueryMatchTypes.exact_match
       } as TextSearch;
       creator.blockQuery = {
         type: SearchQueryTypes.file_name,
-        text: 'secret',
+        value: 'secret',
         matchType: TextSearchQueryMatchTypes.exact_match,
         negate: false
       } as TextSearch;
@@ -308,7 +308,7 @@ describe('SessionManager', (sqlHelper: DBTestHelper) => {
       sharing.creator = creator as any;
       sharing.searchQuery = {
         type: SearchQueryTypes.directory,
-        text: '/event/path',
+        value: '/event/path',
         matchType: TextSearchQueryMatchTypes.exact_match
       } as TextSearch;
 

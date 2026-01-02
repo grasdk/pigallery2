@@ -9,7 +9,6 @@ import {DynamicConfig} from '../../../../common/entities/DynamicConfig';
 declare const process: { nextTick: (_: unknown) => void };
 declare const global: { gc: () => void };
 
-const LOG_TAG = '[JOB]';
 
 export abstract class Job<T extends Record<string, unknown> = Record<string, unknown>> implements IJob<T> {
   public allowParallelRun: boolean = null;
@@ -22,6 +21,10 @@ export abstract class Job<T extends Record<string, unknown> = Record<string, unk
 
   public set JobListener(value: IJobListener) {
     this.jobListener = value;
+  }
+
+  public get LOG_TAG(): string {
+    return '[JOB]';
   }
 
   public abstract get Supported(): boolean;
@@ -49,7 +52,7 @@ export abstract class Job<T extends Record<string, unknown> = Record<string, unk
   ): Promise<void> {
     if (this.InProgress === false && this.Supported === true) {
       Logger.info(
-        LOG_TAG,
+        this.LOG_TAG,
         'Running job ' + (soloRun === true ? 'solo' : '') + ': ' + this.Name
       );
       this.soloRun = soloRun;
@@ -65,7 +68,8 @@ export abstract class Job<T extends Record<string, unknown> = Record<string, unk
       }
       this.progress = new JobProgress(
         this.Name,
-        JobDTOUtils.getHashName(this.Name, this.config)
+        JobDTOUtils.getHashName(this.Name, this.config),
+        this.LOG_TAG
       );
       this.progress.OnChange = this.jobListener.onProgressUpdate;
       const pr = new Promise<void>((resolve): void => {
@@ -80,7 +84,7 @@ export abstract class Job<T extends Record<string, unknown> = Record<string, unk
       return pr;
     } else {
       Logger.info(
-        LOG_TAG,
+        this.LOG_TAG,
         'Job already running or not supported: ' + this.Name
       );
       return Promise.reject(
@@ -93,7 +97,7 @@ export abstract class Job<T extends Record<string, unknown> = Record<string, unk
     if (this.InProgress === false) {
       return;
     }
-    Logger.info(LOG_TAG, 'Stopping job: ' + this.Name);
+    Logger.info(this.LOG_TAG, 'Stopping job: ' + this.Name);
     this.Progress.State = JobProgressStates.cancelling;
   }
 
@@ -125,9 +129,12 @@ export abstract class Job<T extends Record<string, unknown> = Record<string, unk
     const finishState = this.Progress.State;
     this.progress = null;
     if (global.gc) {
+      Logger.silly(this.LOG_TAG, 'Triggering GC on Finish of ' + this.Name);
       global.gc();
+    } else {
+      Logger.silly(this.LOG_TAG, 'No GC on Finish of ' + this.Name);
     }
-    Logger.info(LOG_TAG, 'Job finished: ' + this.Name);
+    Logger.info(this.LOG_TAG, 'Job finished: ' + this.Name);
     if (this.IsInstant) {
       this.prResolve();
     }
@@ -155,8 +162,8 @@ export abstract class Job<T extends Record<string, unknown> = Record<string, unk
         await new Promise(setImmediate);
         this.run();
       } catch (e) {
-        Logger.error(LOG_TAG, 'Job failed with:');
-        Logger.error(LOG_TAG, e);
+        Logger.error(this.LOG_TAG, 'Job failed with:');
+        Logger.error(this.LOG_TAG, e);
         this.Progress.log('Failed with: ' + (typeof e.toString === 'function') ? e.toString() : JSON.stringify(e));
         this.Progress.State = JobProgressStates.failed;
       }

@@ -273,7 +273,7 @@ export class GalleryRouter {
 
   protected static addAutoComplete(app: Express): void {
     app.get(
-      Config.Server.apiPath + '/autocomplete/:text(*)',
+      Config.Server.apiPath + '/autocomplete/:value(*)',
       // common part
       AuthenticationMWs.authenticate,
       AuthenticationMWs.authorise(UserRoles.LimitedGuest),

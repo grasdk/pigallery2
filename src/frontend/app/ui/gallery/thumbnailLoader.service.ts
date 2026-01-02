@@ -154,7 +154,7 @@ export class ThumbnailLoaderService {
       this.que.push(thTask);
     }
 
-    const thumbnailTaskEntity = {priority, listener, parentTask: thTask};
+    const thumbnailTaskEntity: ThumbnailTaskEntity = {priority, listener, parentTask: thTask};
     thTask.taskEntities.push(thumbnailTaskEntity);
     if (thTask.inProgress === true) {
       listener.onStartedLoading();

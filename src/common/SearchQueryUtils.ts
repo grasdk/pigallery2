@@ -1,18 +1,20 @@
 import {
   NegatableSearchQuery,
   OrientationSearch,
+  RangeSearchQueryTypes,
   SearchListQuery,
   SearchQueryDTO,
   SearchQueryTypes,
   SomeOfSearchQuery,
-  TextSearch
+  TextSearch,
+  TextSearchQueryTypes
 } from './entities/SearchQueryDTO';
 import {SearchQueryParser} from './SearchQueryParser';
 import {Utils} from './Utils';
 
 export const SearchQueryUtils = {
   negate: (query: SearchQueryDTO): SearchQueryDTO => {
-    query = Utils.clone(query)
+    query = Utils.clone(query);
     switch (query.type) {
       case SearchQueryTypes.AND:
         query.type = SearchQueryTypes.OR;
@@ -29,12 +31,10 @@ export const SearchQueryUtils = {
       case SearchQueryTypes.orientation:
         (query as OrientationSearch).landscape = !(query as OrientationSearch).landscape;
         return query;
-      case SearchQueryTypes.from_date:
-      case SearchQueryTypes.to_date:
-      case SearchQueryTypes.min_rating:
-      case SearchQueryTypes.max_rating:
-      case SearchQueryTypes.min_resolution:
-      case SearchQueryTypes.max_resolution:
+      case SearchQueryTypes.date:
+      case SearchQueryTypes.rating:
+      case SearchQueryTypes.resolution:
+      case SearchQueryTypes.person_count:
       case SearchQueryTypes.distance:
       case SearchQueryTypes.any_text:
       case SearchQueryTypes.person:
@@ -107,7 +107,7 @@ export const SearchQueryUtils = {
   isQueryEmpty(query: SearchQueryDTO): boolean {
     return !query ||
       query.type === undefined ||
-      (query.type === SearchQueryTypes.any_text && !(query as TextSearch).text);
+      (query.type === SearchQueryTypes.any_text && !(query as TextSearch).value);
   },
   // Recursively strip negate:false so that optional false flags do not break validation
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -130,7 +130,7 @@ export const SearchQueryUtils = {
     }
     return val;
   },
-  validateSearchQuery(query: SearchQueryDTO, what = 'SearchQuery'): void {
+  validateSearchQuery: (query: SearchQueryDTO, what = 'SearchQuery'): void => {
     if (!query) {
       return;
     }
@@ -152,6 +152,94 @@ export const SearchQueryUtils = {
       }
       throw new Error(`${what} is not valid. ${(e as Error)?.message ?? e}`);
     }
+  },
+  URLMap: {
+    type: 't',
+    list: 'l',
+    negate: 'n',
+    matchType: 'mt',
+    distance: 'd',
+    from: 'f',
+    value: 'v',
+    min: 'm',
+    max: 'x',
+    landscape: 'ls',
+    daysLength: 'dl',
+    frequency: 'fq',
+    agoNumber: 'an',
+    GPSData: 'g',
+    latitude: 'lat',
+    longitude: 'lng',
+  } as Record<string, string>,
+  /**
+   * Make the SearchQuery URL friendly and shorter
+   * @param query
+   */
+  urlify: (query: SearchQueryDTO): string => {
+    if (!query) {
+      return '';
+    }
+    query=SearchQueryUtils.stripFalseNegate(query);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const shorten = (obj: any): any => {
+      if (Array.isArray(obj)) {
+        return obj.map(shorten);
+      }
+      if (obj && typeof obj === 'object') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const res: any = {};
+        for (const key of Object.keys(obj)) {
+          if (key === 'negate' && obj[key] === false) {
+            continue;
+          }
+          res[SearchQueryUtils.URLMap[key] || key] = shorten(obj[key]);
+        }
+        return res;
+      }
+      return obj;
+    };
+
+    return JSON.stringify(shorten(query));
+  },
+  /**
+   * Pareses the shortened urls and returns with the original SearchQueryDTO
+   * @param urlQuery
+   */
+  parseURLifiedQuery: (urlQuery: string): SearchQueryDTO => {
+    if (!urlQuery || urlQuery === '') {
+      return null;
+    }
+
+    const map: Record<string, string> = {};
+    Object.keys(SearchQueryUtils.URLMap).forEach(key => {
+      map[SearchQueryUtils.URLMap[key]] = key;
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const unshorten = (obj: any): any => {
+      if (Array.isArray(obj)) {
+        return obj.map(unshorten);
+      }
+      if (obj && typeof obj === 'object') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const res: any = {};
+        for (const key of Object.keys(obj)) {
+          let unshortenedKey = map[key] || key;
+          if (unshortenedKey === 'text' && obj.t !== undefined && !TextSearchQueryTypes.includes(obj.t)) {
+            // If it's not a text search, 'v' should map to 'value'
+            if (RangeSearchQueryTypes.includes(obj.t)) {
+              unshortenedKey = 'value';
+            }
+          }
+          res[unshortenedKey] = unshorten(obj[key]);
+        }
+        return res;
+      }
+      return obj;
+    };
+
+    return unshorten(JSON.parse(urlQuery));
+
+
   }
 };
 

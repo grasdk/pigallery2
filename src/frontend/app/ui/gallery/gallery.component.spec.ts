@@ -1,6 +1,6 @@
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {ActivatedRoute, provideRouter} from '@angular/router';
-import {BehaviorSubject, of} from 'rxjs';
+import {BehaviorSubject, Observable, of} from 'rxjs';
 import {ChangeDetectorRef} from '@angular/core';
 import {provideHttpClient, withInterceptorsFromDi} from '@angular/common/http';
 import {provideHttpClientTesting} from '@angular/common/http/testing';
@@ -30,6 +30,7 @@ import {GalleryNavigatorService} from './navigator/navigator.service';
 import {MediaButtonModalService} from './grid/photo/media-button-modal/media-button-modal.service';
 import {SortingMethod} from '../../../../common/entities/SortingMethods';
 import {SearchQueryParserService} from './search/search-query-parser.service';
+import {BlogService, GroupedMarkdown} from './blog/blog.service';
 
 
 // Mock services
@@ -83,6 +84,13 @@ class MockCacheService {
   setThemeMode() {
   }
 }
+
+class MockBlogService{
+  getMarkDowns(date: Date): Observable<GroupedMarkdown[]>{
+    return of([]);
+  }
+}
+
 
 class MockGallerySortingService {
   sorting = new BehaviorSubject({} as SortingMethod);
@@ -142,6 +150,7 @@ describe('GalleryComponent', () => {
         {provide: GallerySortingService, useClass: MockGallerySortingService},
         {provide: PiTitleService, useClass: MockPiTitleService},
         {provide: GPXFilesFilterPipe, useClass: MockGPXFilesFilterPipe},
+        {provide: BlogService, useClass: MockBlogService},
         {provide: MDFilesFilterPipe, useClass: MockMDFilesFilterPipe},
         {provide: FullScreenService, useValue: jasmine.createSpyObj('FullScreenService', ['mock'])},
         {provide: OverlayService, useValue: jasmine.createSpyObj('OverlayService', ['mock'])},

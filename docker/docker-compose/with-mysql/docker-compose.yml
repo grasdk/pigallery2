@@ -28,6 +28,10 @@ services:
     image: bpatrik/pigallery2:latest
     command: sh -c 'bin/wait-for pigallery-db:3306 -- --Server-Database-mysql-host=pigallery-db --Server-Database-mysql-username=pigallery2 --Server-Database-mysql-password=pigallery2_pass --Server-Database-mysql-database=pigallery2'
     container_name: pigallery2
+    deploy:
+      resources:
+        limits:
+          memory: 3G # <1GB RAM might also work. It will trigger GC more often. GC is slow. See https://github.com/bpatrik/pigallery2/issues/1080
     environment:
       - NODE_ENV=production # set to 'debug' for full debug logging
       # - NODE_OPTIONS=--enable-source-maps # enable source map support on the backend  for development

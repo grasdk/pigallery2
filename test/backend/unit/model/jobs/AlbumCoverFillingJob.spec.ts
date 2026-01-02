@@ -9,6 +9,7 @@ import {DefaultsJobs} from '../../../../../src/common/entities/job/JobDTO';
 import {JobRepository} from '../../../../../src/backend/model/jobs/JobRepository';
 import {Config} from '../../../../../src/common/config/private/Config';
 import {UserEntity} from '../../../../../src/backend/model/database/enitites/UserEntity';
+import {UserDTO} from '../../../../../src/common/entities/UserDTO';
 
 const deepEqualInAnyOrder = require('deep-equal-in-any-order');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -64,6 +65,8 @@ describe('AlbumCoverFillingJob', (sqlHelper: DBTestHelper) => {
     // Arrange: fake sessions
     const s1 = new SessionContext();
     const s2 = new SessionContext();
+    s1.user = {projectionKey: 'pk1'} as UserDTO;
+    s2.user = {projectionKey: 'pk2'} as UserDTO;
     const sessions = [s1, s2];
 
     // Stub SessionManager.getAvailableUserSessions
@@ -137,7 +140,9 @@ describe('AlbumCoverFillingJob', (sqlHelper: DBTestHelper) => {
 
   it('handles no directories gracefully (still refreshes once, no cache calls)', async () => {
     // Arrange sessions
-    const sessions = [new SessionContext()];
+    const s1 = new SessionContext();
+    s1.user = {projectionKey: 'pk1'} as UserDTO;
+    const sessions = [s1];
     const origGetSessions = ObjectManagers.getInstance().SessionManager.getAvailableUserSessions;
     (ObjectManagers.getInstance().SessionManager as any).getAvailableUserSessions = (() => Promise.resolve(sessions)) as any;
 

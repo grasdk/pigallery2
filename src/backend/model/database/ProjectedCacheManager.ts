@@ -18,6 +18,7 @@ import {MediaEntity} from './enitites/MediaEntity';
 import {Config} from '../../../common/config/private/Config';
 import {DatabaseType} from '../../../common/config/private/PrivateConfig';
 import {ProjectedPersonCacheEntity} from './enitites/person/ProjectedPersonCacheEntity';
+import {NotificationManager} from '../NotifocationManager';
 
 const LOG_TAG = '[ProjectedCacheManager]';
 
@@ -35,6 +36,9 @@ export class ProjectedCacheManager implements IObjectManager {
     await this.invalidateDirectoryCache(changedDir);
   }
 
+  /**
+   * Includes all possible projection keys, including the default one and sharing keys too.
+   */
   public async getAllProjections(): Promise<string[]> {
     const connection = await SQLConnection.getConnection();
     const activeKeys = new Set<string>();
@@ -197,6 +201,7 @@ export class ProjectedCacheManager implements IObjectManager {
   }
 
   public async setAndGetCacheForAlbum(connection: Connection, session: SessionContext, album: {
+    name: string,
     id: number,
     searchQuery: any
   }): Promise<ProjectedAlbumCacheEntity> {
@@ -236,21 +241,27 @@ export class ProjectedCacheManager implements IObjectManager {
       baseQb.andWhere(session.projectionQuery);
     }
 
-    const agg = await baseQb
-      .select([
-        'COUNT(*) as itemCount',
-        'MIN(media.metadata.creationDate) as oldest',
-        'MAX(media.metadata.creationDate) as youngest',
-      ])
-      .getRawOne();
+    let coverMedia, agg;
+    try {
+      agg = await baseQb
+        .select([
+          'COUNT(*) as itemCount',
+          'MIN(media.metadata.creationDate) as oldest',
+          'MAX(media.metadata.creationDate) as youngest',
+        ])
+        .getRawOne();
+
+
+      // Compute cover respecting projection
+      coverMedia = await ObjectManagers.getInstance().CoverManager.getCoverForAlbum(session, album as any);
+    } catch (e) {
+      Logger.error(LOG_TAG, `Error computing album cache for album "${album.name}": ` + e);
+      NotificationManager.warning(`Error computing album cache for album "${album.name}"`);
+    }
 
     const itemCount: number = agg?.itemCount != null ? parseInt(agg.itemCount as any, 10) : 0;
     const oldestMedia: number = agg?.oldest != null ? parseInt(agg.oldest as any, 10) : null;
     const youngestMedia: number = agg?.youngest != null ? parseInt(agg.youngest as any, 10) : null;
-
-    // Compute cover respecting projection
-    const coverMedia = await ObjectManagers.getInstance().CoverManager.getCoverForAlbum(session, album as any);
-
 
     if (!row) {
       row = new ProjectedAlbumCacheEntity();

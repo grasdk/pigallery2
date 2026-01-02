@@ -5,7 +5,7 @@ import {GalleryManager} from '../../../../../src/backend/model/database/GalleryM
 import {ParentDirectoryDTO} from '../../../../../src/common/entities/DirectoryDTO';
 import {Connection} from 'typeorm';
 import {SessionContext} from '../../../../../src/backend/model/SessionContext';
-import {SearchQueryTypes, TextSearchQueryMatchTypes} from '../../../../../src/common/entities/SearchQueryDTO';
+import {SearchQueryTypes, TextSearch, TextSearchQueryMatchTypes} from '../../../../../src/common/entities/SearchQueryDTO';
 import {ObjectManagers} from '../../../../../src/backend/model/ObjectManagers';
 import {SQLConnection} from '../../../../../src/backend/model/database/SQLConnection';
 import {Config} from '../../../../../src/common/config/private/Config';
@@ -85,9 +85,9 @@ describe('GalleryManager', (sqlHelper: DBTestHelper) => {
       // Create a projection query that filters based on media name
       const searchQuery = {
         type: SearchQueryTypes.file_name,
-        text: 'photo1', // We've named our test photo specifically with this pattern
+        value: 'photo1', // We've named our test photo specifically with this pattern
         matchType: TextSearchQueryMatchTypes.like
-      };
+      } as TextSearch;
       const session = await ObjectManagers.getInstance().SessionManager.buildContext({
         allowQuery: searchQuery,
         overrideAllowBlockList: true
@@ -117,9 +117,9 @@ describe('GalleryManager', (sqlHelper: DBTestHelper) => {
 
       const searchQuery = {
         type: SearchQueryTypes.file_name,
-        text: 'this_file_name_does_not_exist_anywhere',
+        value: 'this_file_name_does_not_exist_anywhere',
         matchType: TextSearchQueryMatchTypes.like
-      };
+      } as TextSearch;
 
 
       const session = await ObjectManagers.getInstance().SessionManager.buildContext({
@@ -150,8 +150,8 @@ describe('GalleryManager', (sqlHelper: DBTestHelper) => {
       const blockQuery = {
         type: SearchQueryTypes.directory,
         matchType: TextSearchQueryMatchTypes.like,
-        text: child.name
-      } as any;
+        value: child.name
+      } as TextSearch;
 
       const session = await ObjectManagers.getInstance().SessionManager.buildContext({
         blockQuery,
@@ -395,9 +395,9 @@ describe('GalleryManager', (sqlHelper: DBTestHelper) => {
       it('enforces projection: allows only matching media name (like "Photo1")', async () => {
         const searchQuery = {
           type: SearchQueryTypes.file_name,
-          text: 'photo1',
+          value: 'photo1',
           matchType: TextSearchQueryMatchTypes.like,
-        };
+        } as TextSearch;
         const session = await ObjectManagers.getInstance().SessionManager.buildContext({
           allowQuery: searchQuery,
           overrideAllowBlockList: true,
@@ -417,9 +417,9 @@ describe('GalleryManager', (sqlHelper: DBTestHelper) => {
       it('returns false when file exists but under different directory (directory constraint)', async () => {
         const searchQuery = {
           type: SearchQueryTypes.file_name,
-          text: 'photo1',
+          value: 'photo1',
           matchType: TextSearchQueryMatchTypes.like,
-        };
+        } as TextSearch;
         const session = await ObjectManagers.getInstance().SessionManager.buildContext({
           allowQuery: searchQuery,
           overrideAllowBlockList: true,
@@ -435,9 +435,9 @@ describe('GalleryManager', (sqlHelper: DBTestHelper) => {
       it('returns false for non-existent file under projection', async () => {
         const searchQuery = {
           type: SearchQueryTypes.file_name,
-          text: 'photo1',
+          value: 'photo1',
           matchType: TextSearchQueryMatchTypes.like,
-        };
+        } as TextSearch;
         const session = await ObjectManagers.getInstance().SessionManager.buildContext({
           allowQuery: searchQuery,
           overrideAllowBlockList: true,
@@ -460,9 +460,9 @@ describe('GalleryManager', (sqlHelper: DBTestHelper) => {
       it('allows directory that contains matching media (projection applied)', async () => {
         const searchQuery = {
           type: SearchQueryTypes.file_name,
-          text: 'photo1',
+          value: 'photo1',
           matchType: TextSearchQueryMatchTypes.like,
-        };
+        } as TextSearch;
         const session = await ObjectManagers.getInstance().SessionManager.buildContext({
           allowQuery: searchQuery,
           overrideAllowBlockList: true,
@@ -476,9 +476,9 @@ describe('GalleryManager', (sqlHelper: DBTestHelper) => {
       it('denies directory that has no matching media under projection', async () => {
         const searchQuery = {
           type: SearchQueryTypes.file_name,
-          text: 'photo1',
+          value: 'photo1',
           matchType: TextSearchQueryMatchTypes.like,
-        };
+        } as TextSearch;
         const session = await ObjectManagers.getInstance().SessionManager.buildContext({
           allowQuery: searchQuery,
           overrideAllowBlockList: true,

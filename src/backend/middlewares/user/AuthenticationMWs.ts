@@ -54,6 +54,12 @@ export class AuthenticationMWs {
       if (req.session?.context && req.session.context?.user?.projectionKey && (!req.session.context?.projectionQuery || Object.keys(req.session.context?.projectionQuery || {}).length === 0)) {
           req.session.context = await ObjectManagers.getInstance().SessionManager.buildContext(req.session.context.user);
       }
+      // auto extend session if rememberMe is set
+      if (req.session.rememberMe) {
+        req.sessionOptions.expires = new Date(
+          Date.now() + Config.Server.sessionTimeout
+        );
+      }
       return next();
     }
 
@@ -256,7 +262,8 @@ export class AuthenticationMWs {
       );
       delete user.password;
       req.session.context = await ObjectManagers.getInstance().SessionManager.buildContext(user);
-      if (req.body.loginCredential.rememberMe) {
+      req.session.rememberMe = req.body.loginCredential.rememberMe;
+      if (req.session.rememberMe) {
         req.sessionOptions.expires = new Date(
           Date.now() + Config.Server.sessionTimeout
         );

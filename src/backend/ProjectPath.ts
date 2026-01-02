@@ -40,7 +40,7 @@ export class ProjectPathClass {
     this.DBFolder = this.getAbsolutePath(this.cfg.Database.dbFolder);
     this.ExtensionFolder = this.getAbsolutePath(this.cfg.Extensions.folder);
 
-    // create thumbnail folder if not exist
+    // create the thumbnail folder if it does not exist
     if (!fs.existsSync(this.TempFolder)) {
       fs.mkdirSync(this.TempFolder);
     }

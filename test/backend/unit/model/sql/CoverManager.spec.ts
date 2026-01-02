@@ -189,41 +189,41 @@ describe('CoverManager', (sqlHelper: DBTestHelper) => {
       DBTestHelper.defaultSession, {
         searchQuery: {
           type: SearchQueryTypes.any_text,
-          text: 'sw'
+          value: 'sw'
         } as TextSearch
       }))).to.deep.equalInAnyOrder(previewifyMedia(p4));
-    Config.AlbumCover.SearchQuery = {type: SearchQueryTypes.any_text, text: 'Boba'} as TextSearch;
+    Config.AlbumCover.SearchQuery = {type: SearchQueryTypes.any_text, value: 'Boba'} as TextSearch;
     expect(Utils.clone(await pm.getCoverForAlbum(
       DBTestHelper.defaultSession, {
         searchQuery: {
           type: SearchQueryTypes.any_text,
-          text: 'sw'
+          value: 'sw'
         } as TextSearch
       }))).to.deep.equalInAnyOrder(previewifyMedia(p));
-    Config.AlbumCover.SearchQuery = {type: SearchQueryTypes.any_text, text: 'Derem'} as TextSearch;
+    Config.AlbumCover.SearchQuery = {type: SearchQueryTypes.any_text, value: 'Derem'} as TextSearch;
     expect(Utils.clone(await pm.getCoverForAlbum(
       DBTestHelper.defaultSession, {
         searchQuery: {
           type: SearchQueryTypes.any_text,
-          text: 'sw'
+          value: 'sw'
         } as TextSearch
       }))).to.deep.equalInAnyOrder(previewifyMedia(p2));
     // Having a preview search query that does not return valid result
-    Config.AlbumCover.SearchQuery = {type: SearchQueryTypes.any_text, text: 'wont find it'} as TextSearch;
+    Config.AlbumCover.SearchQuery = {type: SearchQueryTypes.any_text, value: 'wont find it'} as TextSearch;
     expect(Utils.clone(await pm.getCoverForAlbum(
       DBTestHelper.defaultSession, {
         searchQuery: {
           type: SearchQueryTypes.any_text,
-          text: 'Derem'
+          value: 'Derem'
         } as TextSearch
       }))).to.deep.equalInAnyOrder(previewifyMedia(p2));
     // having a saved search that does not have any image
-    Config.AlbumCover.SearchQuery = {type: SearchQueryTypes.any_text, text: 'Derem'} as TextSearch;
+    Config.AlbumCover.SearchQuery = {type: SearchQueryTypes.any_text, value: 'Derem'} as TextSearch;
     expect(Utils.clone(await pm.getCoverForAlbum(
       DBTestHelper.defaultSession, {
         searchQuery: {
           type: SearchQueryTypes.any_text,
-          text: 'wont find it'
+          value: 'wont find it'
         } as TextSearch
       }))).to.deep.equal(null);
   });

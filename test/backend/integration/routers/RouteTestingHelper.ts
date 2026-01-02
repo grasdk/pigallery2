@@ -14,7 +14,7 @@ export class RouteTestingHelper {
   static async createSharing(testUser: UserDTO, password: string = null): Promise<SharingDTO> {
     const sharing = {
       sharingKey: 'sharing_test_key_' + Date.now(),
-      searchQuery: {type: SearchQueryTypes.directory, text: 'test', matchType: TextSearchQueryMatchTypes.exact_match} as TextSearch,
+      searchQuery: {type: SearchQueryTypes.directory, value: 'test', matchType: TextSearchQueryMatchTypes.exact_match} as TextSearch,
       expires: Date.now() + 1000,
       timeStamp: Date.now(),
       creator: testUser

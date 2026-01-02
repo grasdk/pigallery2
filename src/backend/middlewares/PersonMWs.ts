@@ -16,11 +16,12 @@ export class PersonMWs {
     }
 
     try {
-      req.resultPipe =
-        await ObjectManagers.getInstance().PersonManager.updatePerson(
-          req.params['name'] as string,
-          req.body as PersonDTO
-        );
+      const name = req.params['name'] as string;
+      await ObjectManagers.getInstance().PersonManager.updatePerson(
+        name,
+        req.body as PersonDTO
+      );
+      req.resultPipe = await ObjectManagers.getInstance().PersonManager.get(req.session.context, name);
       return next();
     } catch (err) {
       return next(

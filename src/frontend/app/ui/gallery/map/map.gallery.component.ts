@@ -9,13 +9,15 @@ import {LatLngLiteral, Map, MapOptions, Marker, marker, tileLayer, TileLayer} fr
 import {ThemeService} from '../../../model/theme.service';
 import {Subscription} from 'rxjs';
 import {MarkerFactory} from './MarkerFactory';
-import { LeafletModule } from '@bluehalo/ngx-leaflet';
+import {LeafletModule} from '@bluehalo/ngx-leaflet';
+import {QueryService} from '../../../model/query.service';
+import {Router} from '@angular/router';
 
 @Component({
-    selector: 'app-gallery-map',
-    templateUrl: './map.gallery.component.html',
-    styleUrls: ['./map.gallery.component.css'],
-    imports: [GalleryMapLightboxComponent, LeafletModule]
+  selector: 'app-gallery-map',
+  templateUrl: './map.gallery.component.html',
+  styleUrls: ['./map.gallery.component.css'],
+  imports: [GalleryMapLightboxComponent, LeafletModule]
 })
 export class GalleryMapComponent implements OnChanges, IRenderable {
   @Input() photos: PhotoDTO[];
@@ -41,6 +43,8 @@ export class GalleryMapComponent implements OnChanges, IRenderable {
   darkModeSubscription: Subscription;
 
   constructor(public mapService: MapService,
+              private queryService: QueryService,
+              private router: Router,
               private themeService: ThemeService) {
     this.initThemeModes();
   }
@@ -136,15 +140,20 @@ export class GalleryMapComponent implements OnChanges, IRenderable {
   }
 
   click(): void {
-    this.mapLightbox.show(this.getDimension());
+    this.router.navigate([], {
+      queryParams: this.queryService.getParams({map:true}),
+    });
   }
 
   public getDimension(): Dimension {
+    if (isNaN(this.mapElement?.nativeElement?.parentElement?.offsetParent.offsetTop)) {
+      return {top: 0, left: 0, width: 0, height: 0};
+    }
     return {
-      top: this.mapElement.nativeElement.parentElement.offsetParent.offsetTop,
-      left: this.mapElement.nativeElement.parentElement.offsetLeft,
-      width: this.mapElement.nativeElement.offsetWidth,
-      height: this.mapElement.nativeElement.offsetHeight,
+      top: this.mapElement.nativeElement?.parentElement?.offsetParent?.offsetTop,
+      left: this.mapElement.nativeElement?.parentElement?.offsetLeft,
+      width: this.mapElement.nativeElement?.offsetWidth,
+      height: this.mapElement.nativeElement?.offsetHeight,
     } as Dimension;
   }
 }

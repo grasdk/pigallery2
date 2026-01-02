@@ -1,5 +1,6 @@
 import {JobProgressDTO, JobProgressLogDTO, JobProgressStates,} from '../../../../common/entities/job/JobProgressDTO';
 import {Config} from '../../../../common/config/private/Config';
+import {Logger} from '../../../Logger';
 
 export class JobProgress {
   private steps = {
@@ -17,7 +18,8 @@ export class JobProgress {
 
   constructor(
       public readonly jobName: string,
-      public readonly HashName: string
+      public readonly HashName: string,
+      public readonly LOG_TAG: string
   ) {
   }
 
@@ -93,6 +95,7 @@ export class JobProgress {
       timestamp: new Date().toISOString(),
       comment: log,
     });
+    Logger.silly(this.LOG_TAG, log);
     this.onChange(this);
   }
 

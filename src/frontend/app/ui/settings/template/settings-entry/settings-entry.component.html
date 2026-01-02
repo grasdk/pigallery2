@@ -38,7 +38,7 @@
             [name]="idName"
             [disabled]="state.readonly || Disabled"
             [id]="idName"
-            required="required">
+            required="true">
           <span class="input-group-text"
                 *ngIf="state.tags?.unit && !this.state.tags?.uiOptions">{{state.tags?.unit}}</span>
         </div>

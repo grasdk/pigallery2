@@ -7,7 +7,7 @@ import {
 import {PhotoEntity, PhotoMetadataEntity} from '../src/backend/model/database/enitites/PhotoEntity';
 import {DirectoryEntity} from '../src/backend/model/database/enitites/DirectoryEntity';
 import {VideoEntity, VideoMetadataEntity} from '../src/backend/model/database/enitites/VideoEntity';
-import {MediaDimension, MediaDTO} from '../src/common/entities/MediaDTO';
+import {MediaDimension, MediaDTO, RatingTypes} from '../src/common/entities/MediaDTO';
 import {
   CameraMetadata,
   CoverPhotoDTO,
@@ -363,7 +363,7 @@ export class TestHelper {
     return f;
   }
 
-  public static getRandomizedPhotoEntry(dir: DirectoryBaseDTO, forceStr: string = null, faces = 2, rating?: number): PhotoDTO {
+  public static getRandomizedPhotoEntry(dir: DirectoryBaseDTO, forceStr: string = null, faces = 2, rating?: RatingTypes): PhotoDTO {
 
 
     const rndStr = (): string => {
@@ -407,7 +407,7 @@ export class TestHelper {
       creationDateOffset: '+01:00',
       fileSize: rndInt(10000),
       caption: rndStr(),
-      rating: rating ?? rndInt(5) as any
+      ...(!isNaN(rating) && {rating})
     };
 
 

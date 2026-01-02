@@ -13,4 +13,10 @@ export class GPXCompressionResetJob extends TempFolderCleaningJob {
     return !GPXProcessing.isGPXFile(filePath);
   }
 
+
+  get LOG_TAG(): string {
+    return '[GPXCompressionResetJob]';
+  }
+
+
 }

@@ -8,6 +8,7 @@ const pre = ConfigClassBuilder.attachPrivateInterface(new PrivateConfigClass());
 try {
   pre.loadSync({preventSaving: true});
 } catch (e) { /* empty */
+  console.error(e);
 }
 // load extension paths before full config load
 ProjectPath.init(pre);

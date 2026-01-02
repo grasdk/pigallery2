@@ -1,0 +1,32 @@
+
+.dropdown-item {
+  padding: 0.25rem 0.25rem;
+}
+
+.row {
+  margin: 0;
+  display: flex;
+}
+
+nav {
+  z-index: 1;
+}
+
+.dropdown-toggle::after {
+  display: none;
+}
+
+.btn-navigator {
+  border: none;
+  line-height: 0;
+}
+
+.sorting-item {
+  cursor: pointer;
+  flex-wrap: nowrap;
+}
+
+.btn-navigator:not(:hover):not(.btn-secondary) {
+  --bs-text-opacity: 1;
+  color: rgba(var(--bs-body-color-rgb), var(--bs-text-opacity)) !important;
+}

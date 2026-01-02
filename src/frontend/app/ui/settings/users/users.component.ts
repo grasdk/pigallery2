@@ -152,7 +152,7 @@ export class UsersComponent implements OnInit {
     const fresh = this.users.find(u => u.id === user.id) || user;
     this.editUser = { ...fresh };
     this.editOriginalUser = Utils.clone(this.editUser);
-    const defaultQuery: SearchQueryDTO = { type: SearchQueryTypes.any_text, text: '' } as TextSearch;
+    const defaultQuery: SearchQueryDTO = { type: SearchQueryTypes.any_text, value: '' } as TextSearch;
     this.editSettings = {
       overrideAllowBlockList: fresh.overrideAllowBlockList ?? false,
       allowQuery: fresh.allowQuery ?? defaultQuery,

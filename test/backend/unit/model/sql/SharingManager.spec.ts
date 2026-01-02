@@ -48,7 +48,7 @@ describe('SharingManager', (sqlHelper: DBTestHelper) => {
     const sharing: SharingDTO = {
       id: null,
       sharingKey: 'testKey',
-      searchQuery: {text: '/', type: SearchQueryTypes.directory} as TextSearch,
+      searchQuery: {value: '/', type: SearchQueryTypes.directory} as TextSearch,
       password: null,
       creator,
       expires: Date.now() + 1000,
@@ -71,7 +71,7 @@ describe('SharingManager', (sqlHelper: DBTestHelper) => {
     const sharing: SharingDTO = {
       id: null,
       sharingKey: 'testKey',
-      searchQuery: {text: '/', type: SearchQueryTypes.directory} as TextSearch,
+      searchQuery: {value: '/', type: SearchQueryTypes.directory} as TextSearch,
       password: null,
       creator,
       expires: Date.now() + 1000,
@@ -95,7 +95,7 @@ describe('SharingManager', (sqlHelper: DBTestHelper) => {
     const sharing: SharingDTO = {
       id: null,
       sharingKey: 'testKey',
-      searchQuery: {text: '/', type: SearchQueryTypes.directory} as TextSearch,
+      searchQuery: {value: '/', type: SearchQueryTypes.directory} as TextSearch,
       password: null,
       creator,
       expires: Date.now() + 1000,

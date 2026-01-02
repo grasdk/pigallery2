@@ -2,6 +2,15 @@
  * Warning: Enum Values in this file should be unique within the file!
  * */
 
+/**
+ * FaceSortByTypes is a subset of SortByDirectionalTypes, their values should match.
+ * They are not merged programatically due to the ordering issue.
+ */
+export enum FaceSortByTypes {
+  Name = 10,
+  PersonCount = 40,
+}
+
 export enum SortByDirectionalTypes {
   Name = 10,
   Date = 20,

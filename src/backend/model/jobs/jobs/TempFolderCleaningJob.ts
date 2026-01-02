@@ -21,6 +21,10 @@ export class TempFolderCleaningJob extends Job {
     this.directoryQueue.push(ProjectPath.TranscodedFolder);
   }
 
+  get LOG_TAG(): string {
+    return '[TempFolderCleaningJob]';
+  }
+
   protected async isValidFile(filePath: string): Promise<boolean> {
     if (PhotoProcessing.isPhoto(filePath)) {
       return PhotoProcessing.isValidConvertedPath(filePath);

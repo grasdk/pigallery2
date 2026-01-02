@@ -16,6 +16,10 @@ services:
   pigallery2:
     image: bpatrik/pigallery2:latest
     container_name: pigallery2
+    deploy:
+      resources:
+        limits:
+          memory: 3G # <1GB RAM might also work. It will trigger GC more often. GC is slow. See https://github.com/bpatrik/pigallery2/issues/1080
     environment:
       - NODE_ENV=production # set to 'debug' for full debug logging
       # - NODE_OPTIONS=--enable-source-maps # enable source map support on the backend for development

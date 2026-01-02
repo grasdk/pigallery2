@@ -33,13 +33,7 @@ export class GalleryBlogComponent implements OnChanges {
 
 
   ngOnChanges(): void {
-    const utcDate = this.date ? this.date.getTime() : undefined;
-    this.mkObservable = this.blogService.groupedMarkdowns.pipe(map(gm => {
-      if (!this.date) {
-        return gm.filter(g => !g.date);
-      }
-      return gm.filter(g => g.date == utcDate);
-    }));
+    this.mkObservable = this.blogService.getMarkDowns(this.date);
   }
 
 

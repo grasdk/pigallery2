@@ -16,7 +16,7 @@
 
   <!--Info box -->
   <div class="info rounded-bottom">
-    {{album.name}} ({{album.cache.itemCount}})
+    {{album.name}} ({{album.cache?.itemCount}})
     <ng-icon *ngIf="CanUpdate && !album.locked"
              (click)="deleteAlbum($event)"
              class="info-button delete float-end"

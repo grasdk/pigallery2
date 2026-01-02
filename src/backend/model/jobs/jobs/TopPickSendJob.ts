@@ -63,6 +63,10 @@ export class TopPickSendJob extends Job<{
         }));
   }
 
+  get LOG_TAG(): string {
+    return '[TopPickSendJob]';
+  }
+
 
   protected async init(): Promise<void> {
     this.status = 'Listing';

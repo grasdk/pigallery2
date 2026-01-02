@@ -50,42 +50,63 @@ export class Logger {
     if (!forcedDebug && Config.Server.Log.level < LogLevel.silly) {
       return;
     }
-    Logger.log(`[\x1b[35mSILLY\x1b[0m]`, ...args);
+    Logger.log(`[\x1b[35mSILLY\x1b[0m]`, console.debug, ...args);
   }
 
   public static debug(...args: LoggerArgs[]): void {
     if (!forcedDebug && Config.Server.Log.level < LogLevel.debug) {
       return;
     }
-    Logger.log(`[\x1b[34mDEBUG\x1b[0m]`, ...args);
+    Logger.log(`[\x1b[34mDEBUG\x1b[0m]`, console.debug, ...args);
   }
 
   public static verbose(...args: LoggerArgs[]): void {
     if (!forcedDebug && Config.Server.Log.level < LogLevel.verbose) {
       return;
     }
-    Logger.log(`[\x1b[36mVERBS\x1b[0m]`, ...args);
+    Logger.log(`[\x1b[36mVERBS\x1b[0m]`, console.debug, ...args);
   }
 
   public static info(...args: LoggerArgs[]): void {
     if (!forcedDebug && Config.Server.Log.level < LogLevel.info) {
       return;
     }
-    Logger.log(`[\x1b[32mINFO_\x1b[0m]`, ...args);
+    Logger.log(`[\x1b[32mINFO_\x1b[0m]`, console.log, ...args);
   }
 
   public static warn(...args: LoggerArgs[]): void {
     if (!forcedDebug && Config.Server.Log.level < LogLevel.warn) {
       return;
     }
-    Logger.log(`[\x1b[33mWARN_\x1b[0m]`, ...args);
+    Logger.log(`[\x1b[33mWARN_\x1b[0m]`, console.warn, ...args);
   }
 
   public static error(...args: LoggerArgs[]): void {
-    Logger.log(`[\x1b[31mERROR\x1b[0m]`, ...args);
+    Logger.log(`[\x1b[31mERROR\x1b[0m]`, console.error, ...args);
   }
 
-  private static log(tag: string, ...args: LoggerArgs[]): void {
+  public static logLevelForError(e: ErrorCodes): LoggerFunction {
+    switch (e) {
+      case ErrorCodes.INPUT_ERROR:
+      case ErrorCodes.NOT_AUTHENTICATED:
+      case ErrorCodes.ALREADY_AUTHENTICATED:
+      case ErrorCodes.NOT_AUTHORISED:
+      case ErrorCodes.PERMISSION_DENIED:
+      case ErrorCodes.CREDENTIAL_NOT_FOUND:
+        return Logger.debug;
+      case ErrorCodes.SETTINGS_ERROR:
+      case ErrorCodes.TASK_ERROR:
+      case ErrorCodes.JOB_ERROR:
+      case ErrorCodes.THUMBNAIL_GENERATION_ERROR:
+      case ErrorCodes.PHOTO_GENERATION_ERROR:
+      case ErrorCodes.SERVER_ERROR:
+        return Logger.error;
+      default:
+        return Logger.warn;
+    }
+  }
+
+  private static log(tag: string, fn: (...data: unknown[]) => void, ...args: LoggerArgs[]): void {
     const date = new Date().toLocaleString();
     let LOG_TAG = '';
     if (
@@ -97,32 +118,11 @@ export class Logger {
       LOG_TAG = args[0];
       args.shift();
     }
-    args.forEach((element:LoggerArgs, index:number) => {
-      if(typeof element === "function"){
+    args.forEach((element: LoggerArgs, index: number) => {
+      if (typeof element === 'function') {
         args[index] = element(); //execute function, put resulting string in the array
       }
     });
-    console.log(date + tag + LOG_TAG, ...args);
-  }
-
-  public static logLevelForError(e: ErrorCodes): LoggerFunction {
-    switch (e) {
-      case ErrorCodes.INPUT_ERROR:
-      case ErrorCodes.NOT_AUTHENTICATED:
-      case ErrorCodes.ALREADY_AUTHENTICATED:
-      case ErrorCodes.NOT_AUTHORISED:
-      case ErrorCodes.PERMISSION_DENIED:
-      case ErrorCodes.CREDENTIAL_NOT_FOUND:
-        return Logger.debug
-      case ErrorCodes.SETTINGS_ERROR:
-      case ErrorCodes.TASK_ERROR:
-      case ErrorCodes.JOB_ERROR:
-      case ErrorCodes.THUMBNAIL_GENERATION_ERROR:
-      case ErrorCodes.PHOTO_GENERATION_ERROR:
-      case ErrorCodes.SERVER_ERROR:
-        return Logger.error
-      default:
-        return Logger.warn
-    }
+    fn(date + tag + LOG_TAG, ...args);
   }
 }

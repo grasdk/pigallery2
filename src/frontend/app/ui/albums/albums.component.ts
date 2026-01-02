@@ -37,7 +37,7 @@ export class AlbumsComponent implements OnInit {
   public size: number;
   public savedSearch = {
     name: '',
-    searchQuery: {type: SearchQueryTypes.any_text, text: ''} as TextSearch,
+    searchQuery: {type: SearchQueryTypes.any_text, value: ''} as TextSearch,
   };
   private modalRef: BsModalRef;
 

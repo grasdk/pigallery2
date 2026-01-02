@@ -19,8 +19,9 @@ import {
   ClientSharingConfig,
   ClientSortingConfig,
   ClientUserConfig,
+  ClientUserOIDCConfig,
   ClientVideoConfig,
-  ConfigPriority,
+  ConfigPriority, MapProviders,
   TAGS
 } from '../public/ClientConfig';
 import {ConfigProperty, SubConfigClass} from 'typeconfig/common';
@@ -279,6 +280,111 @@ export class ServerDataBaseConfig {
 
 
 @SubConfigClass({softReadonly: true})
+export class ServerUserOIDCConfig extends ClientUserOIDCConfig {
+
+  @ConfigProperty({
+    tags: {
+      name: $localize`Issuer URL`,
+      priority: ConfigPriority.advanced,
+      uiResetNeeded: {server: true},
+      uiOptional:true,
+      relevant: (c: any) => c.enabled,
+      hint: 'https://auth.example.com/application/o/pigallery2/'
+    } as TAGS,
+    description: $localize`OIDC provider Issuer URL`
+  })
+  issuerUrl: string = '';
+
+  @ConfigProperty({
+    tags: {
+      name: $localize`Client ID`,
+      priority: ConfigPriority.advanced,
+      uiOptional:true,
+      relevant: (c: any) => c.enabled,
+      uiResetNeeded: {server: true}
+    }
+  })
+  clientId: string = '';
+
+  @ConfigProperty({
+    type: 'password',
+    tags: {
+      name: $localize`Client secret`,
+      priority: ConfigPriority.advanced,
+      uiOptional:true,
+      relevant: (c: any) => c.enabled,
+      uiResetNeeded: {server: true}
+    } as TAGS
+  })
+  clientSecret: string = '';
+
+  @ConfigProperty({
+    tags: {
+      name: $localize`Redirect URI`, priority:
+      ConfigPriority.advanced,
+      hint: 'https://example.com/pgapi/auth/oidc/callback',
+      uiOptional:true,
+      relevant: (c: any) => c.enabled,
+      uiResetNeeded: {server: true}
+    },
+    description: $localize`Full callback URL registered at the provider (e.g.: https://example.com/pgapi/auth/oidc/callback)`
+  })
+  redirectUri: string = '';
+
+  @ConfigProperty({
+    arrayType: 'string',
+    tags: {
+      name: $localize`Scopes`,
+      relevant: (c: any) => c.enabled,
+      priority: ConfigPriority.advanced
+    }
+  })
+  scopes: string[] = ['openid', 'profile', 'email'];
+
+  @ConfigProperty({
+    tags: {
+      name: $localize`Username claim`,
+      relevant: (c: any) => c.enabled,
+      priority: ConfigPriority.advanced
+    },
+    description: $localize`JWT claim to use for matching user name. Defaults to preferred_username; fallbacks to email if empty.`
+  })
+  usernameClaim: string = 'preferred_username';
+
+  @ConfigProperty({
+    tags: {
+      name: $localize`Email claim`,
+      relevant: (c: any) => c.enabled,
+      priority: ConfigPriority.advanced
+    }
+  })
+  emailClaim: string = 'email';
+
+  @ConfigProperty({
+    arrayType: 'string',
+    tags: {
+      name: $localize`Allowed email domains`,
+      uiOptional:true,
+      relevant: (c: any) => c.enabled,
+      priority: ConfigPriority.advanced,
+    },
+    description: $localize`If set, only identities with emails in these domains will be accepted.`
+  })
+  allowedDomains: string[] = [];
+
+  @ConfigProperty({
+    tags: {
+      name: $localize`Auto-create users`,
+      relevant: (c: any) => c.enabled,
+      priority: ConfigPriority.advanced
+    },
+    description: $localize`If enabled, unknown users will be created with Guest role on first login. If disabled, only existing app users can log in.`
+  })
+  autoCreateUser: boolean = false;
+}
+
+
+@SubConfigClass({softReadonly: true})
 export class ServerUserConfig extends ClientUserConfig {
   @ConfigProperty({
     arrayType: UserConfig,
@@ -307,7 +413,7 @@ export class ServerUserConfig extends ClientUserConfig {
   })
   allowQuery: SearchQueryDTO = {
     type: SearchQueryTypes.any_text,
-    text: '',
+    value: '',
   } as TextSearch;
 
   @ConfigProperty({
@@ -322,7 +428,7 @@ export class ServerUserConfig extends ClientUserConfig {
   })
   blockQuery: SearchQueryDTO = {
     type: SearchQueryTypes.any_text,
-    text: '',
+    value: '',
   } as TextSearch;
 
   @ConfigProperty({
@@ -334,6 +440,18 @@ export class ServerUserConfig extends ClientUserConfig {
     description: $localize`if true, the app won't show a warning for using the default user.`
   })
   suppressDefUserWarn: boolean = false;
+
+  @ConfigProperty({
+    tags: {
+      name: $localize`OpenID Connect`,
+      priority: ConfigPriority.advanced,
+      uiResetNeeded: {server: true},
+      uiIcon: 'ionFingerPrint',
+      githubIssue: 1096
+    },
+    description:  $localize`Setup SSO with external authentication apps like Authentik or Authelia`,
+  })
+  oidc: ServerUserOIDCConfig = new ServerUserOIDCConfig();
 }
 
 
@@ -905,7 +1023,7 @@ export class ServerAlbumCoverConfig {
   })
   SearchQuery: SearchQueryDTO = {
     type: SearchQueryTypes.any_text,
-    text: '',
+    value: '',
   } as TextSearch;
 
   @ConfigProperty({

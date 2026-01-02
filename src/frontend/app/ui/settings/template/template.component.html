@@ -40,10 +40,12 @@
           ></ng-container>
         </div>
         <div class="col">
-          <button class="btn btn-success float-end"
-                  [disabled]="settingsForm.form.invalid || !changed || inProgress"
-                  (click)="save()" i18n>Save
-          </button>
+          <span class="float-end" [title]="getSaveTitle(settingsForm.form.invalid)">
+            <button class="btn btn-success"
+                    [disabled]="settingsForm.form.invalid || !changed || inProgress"
+                    (click)="save()" i18n>Save
+            </button>
+          </span>
           <button class="btn btn-secondary float-end"
                   [disabled]=" !changed || inProgress"
                   (click)="reset()" i18n>Reset

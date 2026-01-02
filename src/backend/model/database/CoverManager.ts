@@ -66,7 +66,7 @@ export class CoverManager {
       Config.AlbumCover.SearchQuery &&
       !Utils.equalsFilter(Config.AlbumCover.SearchQuery, {
         type: SearchQueryTypes.any_text,
-        text: '',
+        value: '',
       } as TextSearch)
     ) {
       try {
@@ -93,19 +93,22 @@ export class CoverManager {
     return coverMedia || null;
   }
 
-  public async getPartialDirsWithoutCovers(): Promise<
+  public async getPartialDirsWithoutCovers(projectionKeys?: string[]): Promise<
     { id: number; name: string; path: string }[]
   > {
     const connection = await SQLConnection.getConnection();
-    return await connection
+    const q = connection
       .getRepository(DirectoryEntity)
       .createQueryBuilder('directory')
       .leftJoin('directory.cache', 'cache')
       .where(new Brackets(qb => {
         qb.where('cache.valid = :valid', {valid: 0})
           .orWhere('cache.valid IS NULL');
-      }))
-      .select(['directory.name as name', 'directory.id as id', 'directory.path as path'])
+      }));
+    if (projectionKeys) {
+      q.andWhere('cache.projectionKey IN (:...projectionKeys)', {projectionKeys});
+    }
+    return await q.select(['directory.name as name', 'directory.id as id', 'directory.path as path'])
       .distinct(true)
       .getRawMany();
   }
@@ -162,7 +165,7 @@ export class CoverManager {
       Config.AlbumCover.SearchQuery &&
       !Utils.equalsFilter(Config.AlbumCover.SearchQuery, {
         type: SearchQueryTypes.any_text,
-        text: '',
+        value: '',
       } as TextSearch)
     ) {
       coverMedia = await coverQuery()

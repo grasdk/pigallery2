@@ -11,7 +11,7 @@ import {PersonEntry} from '../../../../../src/backend/model/database/enitites/pe
 import {PersonJunctionTable} from '../../../../../src/backend/model/database/enitites/person/PersonJunctionTable';
 import {ProjectedPersonCacheEntity} from '../../../../../src/backend/model/database/enitites/person/ProjectedPersonCacheEntity';
 import {ObjectManagers} from '../../../../../src/backend/model/ObjectManagers';
-import {SearchQueryTypes, TextSearchQueryMatchTypes} from '../../../../../src/common/entities/SearchQueryDTO';
+import {SearchQueryTypes, TextSearch, TextSearchQueryMatchTypes} from '../../../../../src/common/entities/SearchQueryDTO';
 import {SessionContext} from '../../../../../src/backend/model/SessionContext';
 
 
@@ -146,14 +146,12 @@ describe('PersonManager', (sqlHelper: DBTestHelper) => {
       const originalPerson = await pm.get(DBTestHelper.defaultSession, 'Boba Fett');
       expect(originalPerson).to.not.be.undefined;
 
-      const updatedPerson = await pm.updatePerson('Boba Fett', {
+      await pm.updatePerson('Boba Fett', {
         id: originalPerson.id,
         name: 'Updated Boba Fett',
         isFavourite: !originalPerson.isFavourite
       });
 
-      expect(updatedPerson.name).to.equal('Updated Boba Fett');
-      expect(updatedPerson.isFavourite).to.equal(!originalPerson.isFavourite);
 
       // Verify the person was actually updated in the database
       const fetchedPerson = await pm.get(DBTestHelper.defaultSession, 'Updated Boba Fett');
@@ -232,9 +230,9 @@ describe('PersonManager', (sqlHelper: DBTestHelper) => {
       // Create projection session that filters by filename
       const projectionSession = await createProjectionSession({
         type: SearchQueryTypes.file_name,
-        text: 'photo1',
+        value: 'photo1',
         matchType: TextSearchQueryMatchTypes.like
-      });
+      } as TextSearch);
 
       const personsWithProjection = await pm.getAll(projectionSession);
       const personsWithDefault = await pm.getAll(DBTestHelper.defaultSession);
@@ -260,9 +258,9 @@ describe('PersonManager', (sqlHelper: DBTestHelper) => {
       // Create projection session
       const projectionSession = await createProjectionSession({
         type: SearchQueryTypes.file_name,
-        text: 'photo1',
+        value: 'photo1',
         matchType: TextSearchQueryMatchTypes.like
-      });
+      } as TextSearch);
 
       // Trigger cache filling
       await pm.getAll(projectionSession);
@@ -283,9 +281,9 @@ describe('PersonManager', (sqlHelper: DBTestHelper) => {
       // Create projection session
       const projectionSession = await createProjectionSession({
         type: SearchQueryTypes.file_name,
-        text: 'sw1',
+        value: 'sw1',
         matchType: TextSearchQueryMatchTypes.like
-      });
+      } as TextSearch);
 
       const personWithProjection = await pm.get(projectionSession, 'Unkle Ben');
       const personWithDefault = await pm.get(DBTestHelper.defaultSession, 'Unkle Ben');

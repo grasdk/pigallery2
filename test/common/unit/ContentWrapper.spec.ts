@@ -88,7 +88,7 @@ describe('ContentWrapper', () => {
       metaFile: [
         TestHelper.getGPXEntry(parent)],
       resultOverflow: false,
-      searchQuery: {type: SearchQueryTypes.any_text, text: ''} as TextSearch
+      searchQuery: {type: SearchQueryTypes.any_text, value: ''} as TextSearch
     };
 
     const cw = ContentWrapperUtils.build(null, sr);
@@ -297,7 +297,7 @@ describe('ContentWrapper', () => {
       const p2 = TestHelper.getPhotoEntry(dir2);
 
       const sr1 = {
-        searchQuery: { type: SearchQueryTypes.any_text, text: '' } as TextSearch,
+        searchQuery: { type: SearchQueryTypes.any_text, value: '' } as TextSearch,
         directories: [dir1],
         media: [p1],
         metaFile: [],
@@ -305,7 +305,7 @@ describe('ContentWrapper', () => {
       } as SearchResultDTO;
 
       const sr2 = {
-        searchQuery: { type: SearchQueryTypes.any_text, text: '' } as TextSearch,
+        searchQuery: { type: SearchQueryTypes.any_text, value: '' } as TextSearch,
         directories: [dir2],
         media: [p2],
         metaFile: [],
@@ -325,7 +325,7 @@ describe('ContentWrapper', () => {
       const p2 = TestHelper.getPhotoEntry(dir2);
 
       const sr1 = {
-        searchQuery: { type: SearchQueryTypes.any_text, text: '' } as TextSearch,
+        searchQuery: { type: SearchQueryTypes.any_text, value: '' } as TextSearch,
         directories: [dir1],
         media: [p1],
         metaFile: [],
@@ -333,7 +333,7 @@ describe('ContentWrapper', () => {
       } as SearchResultDTO;
 
       const sr2 = {
-        searchQuery: { type: SearchQueryTypes.any_text, text: '' } as TextSearch,
+        searchQuery: { type: SearchQueryTypes.any_text, value: '' } as TextSearch,
         directories: [dir2],
         media: [p2],
         metaFile: [],
@@ -353,7 +353,7 @@ describe('ContentWrapper', () => {
       p2.name = 'renamed.jpg';
 
       const sr1 = {
-        searchQuery: { type: SearchQueryTypes.any_text, text: '' } as TextSearch,
+        searchQuery: { type: SearchQueryTypes.any_text, value: '' } as TextSearch,
         directories: [dir1],
         media: [p1],
         metaFile: [],
@@ -361,7 +361,7 @@ describe('ContentWrapper', () => {
       } as SearchResultDTO;
 
       const sr2 = {
-        searchQuery: { type: SearchQueryTypes.any_text, text: '' } as TextSearch,
+        searchQuery: { type: SearchQueryTypes.any_text, value: '' } as TextSearch,
         directories: [dir2],
         media: [p2],
         metaFile: [],
@@ -383,7 +383,7 @@ describe('ContentWrapper', () => {
       gpx2.name = 'renamed.gpx';
 
       const sr1 = {
-        searchQuery: { type: SearchQueryTypes.any_text, text: '' } as TextSearch,
+        searchQuery: { type: SearchQueryTypes.any_text, value: '' } as TextSearch,
         directories: [dir1],
         media: [p1],
         metaFile: [gpx1],
@@ -391,7 +391,7 @@ describe('ContentWrapper', () => {
       } as SearchResultDTO;
 
       const sr2 = {
-        searchQuery: { type: SearchQueryTypes.any_text, text: '' } as TextSearch,
+        searchQuery: { type: SearchQueryTypes.any_text, value: '' } as TextSearch,
         directories: [dir2],
         media: [p2],
         metaFile: [gpx2],
@@ -408,7 +408,7 @@ describe('ContentWrapper', () => {
       const p1 = TestHelper.getPhotoEntry(dir1);
 
       const sr = {
-        searchQuery: { type: SearchQueryTypes.any_text, text: '' } as TextSearch,
+        searchQuery: { type: SearchQueryTypes.any_text, value: '' } as TextSearch,
         directories: [dir1],
         media: [p1],
         metaFile: [],
@@ -426,7 +426,7 @@ describe('ContentWrapper', () => {
       const cw1 = ContentWrapperUtils.build(dir as ParentDirectoryDTO, null);
 
       const sr = {
-        searchQuery: { type: SearchQueryTypes.any_text, text: '' } as TextSearch,
+        searchQuery: { type: SearchQueryTypes.any_text, value: '' } as TextSearch,
         directories: [dir],
         media: dir.media,
         metaFile: [],
@@ -444,7 +444,7 @@ describe('ContentWrapper', () => {
       const p2 = TestHelper.getPhotoEntry(dir2);
 
       const sr1 = {
-        searchQuery: { type: SearchQueryTypes.any_text, text: '' } as TextSearch,
+        searchQuery: { type: SearchQueryTypes.any_text, value: '' } as TextSearch,
         directories: [dir1],
         media: [p1],
         metaFile: [],
@@ -452,7 +452,7 @@ describe('ContentWrapper', () => {
       } as SearchResultDTO;
 
       const sr2 = {
-        searchQuery: { type: SearchQueryTypes.any_text, text: '' } as TextSearch,
+        searchQuery: { type: SearchQueryTypes.any_text, value: '' } as TextSearch,
         directories: [dir2],
         media: [],
         metaFile: [],

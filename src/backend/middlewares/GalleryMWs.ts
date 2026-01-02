@@ -332,7 +332,7 @@ export class GalleryMWs {
       if (Config.Search.AutoComplete.enabled === false) {
         return next();
       }
-      if (!req.params['text']) {
+      if (!req.params['value']) {
         return next();
       }
 
@@ -343,7 +343,7 @@ export class GalleryMWs {
       req.resultPipe =
         await ObjectManagers.getInstance().SearchManager.autocomplete(
           req.session.context,
-          req.params['text'],
+          req.params['value'],
           type
         );
       return next();

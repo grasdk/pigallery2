@@ -15,7 +15,6 @@ import {MDFileDTO} from '../../../common/entities/MDFileDTO';
 import {MetadataLoader} from './MetadataLoader';
 import {NotificationManager} from '../NotifocationManager';
 import {ExtensionDecorator} from '../extension/ExtensionDecorator';
-import {ObjectManagers} from '../ObjectManagers';
 import {SessionManager} from '../database/SessionManager';
 
 
@@ -160,7 +159,8 @@ export class DiskManager {
 
       if (count % 1000 === 0) {
         if (global.gc) {
-          global.gc(); 
+          Logger.silly(LOG_TAG, 'Triggering gc after scanning ', count, ' files in dir: ', relativeDirectoryName);
+          global.gc();
         }
       }
       const fullFilePath = path.normalize(

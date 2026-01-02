@@ -16,7 +16,7 @@ export class PersonManager extends ProjectionAwareManager<PersonEntry> {
   async updatePerson(
     name: string,
     partialPerson: PersonDTO
-  ): Promise<PersonEntry> {
+  ): Promise<void> {
     const connection = await SQLConnection.getConnection();
     const repository = connection.getRepository(PersonEntry);
     const person = await repository
@@ -36,7 +36,7 @@ export class PersonManager extends ProjectionAwareManager<PersonEntry> {
     // reset memory cache after person update. DB cache entry did not change, no need to reset that
     this.resetMemoryCache();
 
-    return person;
+    return;
   }
 
   /**

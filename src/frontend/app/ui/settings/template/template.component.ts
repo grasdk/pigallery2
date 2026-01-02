@@ -105,6 +105,19 @@ export class TemplateComponent implements OnInit, OnChanges, OnDestroy, ISetting
     return !this.states?.shouldHide || !this.states?.shouldHide();
   }
 
+  getSaveTitle(isFormValid: boolean): string {
+    if (isFormValid) {
+      return $localize`Can't save: invalid form.`;
+    }
+    if (!this.changed) {
+      return $localize`Can't save: not changed.`;
+    }
+    if (this.inProgress) {
+      return $localize`Can't save: saving in progress.`;
+    }
+    return $localize`Click to save.`;
+  }
+
   ngOnChanges(): void {
     if (!this.ConfigPath) {
       this.setSliceFN(c => ({value: c as any, isConfigType: true, type: WebConfig} as any));

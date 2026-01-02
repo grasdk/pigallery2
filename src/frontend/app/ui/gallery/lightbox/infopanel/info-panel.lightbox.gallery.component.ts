@@ -6,7 +6,13 @@ import {VideoDTO, VideoMetadata,} from '../../../../../../common/entities/VideoD
 import {Utils} from '../../../../../../common/Utils';
 import {QueryService} from '../../../../model/query.service';
 import {MapService} from '../../map/map.service';
-import {DistanceSearch, SearchQueryTypes, TextSearch, TextSearchQueryMatchTypes,} from '../../../../../../common/entities/SearchQueryDTO';
+import {
+  ANDSearchQuery,
+  DistanceSearch, DateSearch,
+  SearchQueryTypes,
+  TextSearch,
+  TextSearchQueryMatchTypes,
+} from '../../../../../../common/entities/SearchQueryDTO';
 import {AuthenticationService} from '../../../../model/network/authentication.service';
 import {LatLngLiteral, marker, Marker, TileLayer, tileLayer} from 'leaflet';
 import {ThemeService} from '../../../../model/theme.service';
@@ -17,6 +23,7 @@ import {RouterLink} from '@angular/router';
 import {LeafletModule} from '@bluehalo/ngx-leaflet';
 import {DurationPipe} from '../../../../pipes/DurationPipe';
 import {FileSizePipe} from '../../../../pipes/FileSizePipe';
+import {SearchQueryUtils} from '../../../../../../common/SearchQueryUtils';
 
 @Component({
   selector: 'app-info-panel',
@@ -164,10 +171,7 @@ export class InfoPanelLightboxComponent implements OnInit, OnChanges {
   }
 
   isThisYear(): boolean {
-    return (
-      new Date().getFullYear() ===
-      Utils.getUTCFullYear(this.media.metadata.creationDate, this.media.metadata.creationDateOffset)
-    );
+    return MediaDTOUtils.createdThisYear(this.media);
   }
 
   toFraction(f: number): string | number {
@@ -210,15 +214,15 @@ export class InfoPanelLightboxComponent implements OnInit, OnChanges {
   }
 
   getTextSearchQuery(name: string, type: SearchQueryTypes): string {
-    return JSON.stringify({
+    return SearchQueryUtils.urlify({
       type,
       matchType: TextSearchQueryMatchTypes.exact_match,
-      text: name,
+      value: name,
     } as TextSearch);
   }
 
   getDistanceSearchQuery(): string {
-    return JSON.stringify({
+    return SearchQueryUtils.urlify({
       type: SearchQueryTypes.distance,
       from: {
         GPSData: {
@@ -238,19 +242,11 @@ export class InfoPanelLightboxComponent implements OnInit, OnChanges {
     const endOfDay = new Date(creationDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    return JSON.stringify({
-      type: SearchQueryTypes.AND,
-      list: [
-        {
-          type: SearchQueryTypes.from_date,
-          value: startOfDay.getTime()
-        },
-        {
-          type: SearchQueryTypes.to_date,
-          value: endOfDay.getTime()
-        }
-      ]
-    });
+    return SearchQueryUtils.urlify({
+      type: SearchQueryTypes.date,
+      min: startOfDay.getTime(),
+      max: endOfDay.getTime()
+    } as DateSearch);
   }
 
 }

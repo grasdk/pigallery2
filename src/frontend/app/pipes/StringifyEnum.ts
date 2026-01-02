@@ -8,7 +8,7 @@ import {EnumTranslations} from '../ui/EnumTranslations';
 export class StringifyEnum implements PipeTransform {
 
   transform(name: string): string {
-    return EnumTranslations[name];
+    return EnumTranslations[name] || name;
   }
 }
 

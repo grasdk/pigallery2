@@ -90,6 +90,10 @@
   opacity: 1.0;
 }
 
+::ng-deep .clickable{
+  cursor: pointer;
+}
+
 ::ng-deep .leaflet-container a.leaflet-popup-close-button span{
   font-size: x-large;
 }

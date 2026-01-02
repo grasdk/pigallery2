@@ -1,0 +1,33 @@
+{
+  "cameraData": {
+    "ISO": 200,
+    "exposure": 0.008,
+    "fStop": 2.8,
+    "focalLength": 9.4,
+    "make": "FUJIFILM",
+    "model": "FinePix F601 ZOOM"
+  },
+  "creationDate": 1764433382000,
+  "faces": [
+    {
+      "box": {
+        "height": 2,
+        "left": 2,
+        "top": 1,
+        "width": 2
+      },
+      "name": "\"quoted \"@#$ name\" !@#$%^&*()_+"
+    }
+  ],
+  "fileSize": 7825,
+  "keywords": [
+    "!@#$%^&amp;*()_+\"{",
+    "\"quoted \"@#$ name\" !@#$%^&amp;*()_+",
+    "}",
+    "!@#$%^&*()_+\"{"
+  ],
+  "size": {
+    "height": 5,
+    "width": 7
+  }
+}

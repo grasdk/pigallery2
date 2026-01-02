@@ -106,7 +106,7 @@ export class GalleryShareComponent implements OnInit, OnDestroy {
             );
             this.currentQuery = {
               type: SearchQueryTypes.directory,
-              text: this.currentDir,
+              value: this.currentDir,
               matchType: TextSearchQueryMatchTypes.exact_match
             } as TextSearch;
             this.sharingTarget = this.currentDir;

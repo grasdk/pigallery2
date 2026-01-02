@@ -43,6 +43,11 @@ export abstract class FileJob<S extends { indexedOnly?: boolean } = { indexedOnl
 
   }
 
+
+  get LOG_TAG(): string {
+    return '[FileJob]';
+  }
+
   protected async init(): Promise<void> {
     this.directoryQueue = [];
     this.fileQueue = [];

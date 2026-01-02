@@ -28,10 +28,11 @@ import {GallerySortingService, MediaGroup} from '../navigator/sorting.service';
 import {GroupByTypes} from '../../../../../common/entities/SortingMethods';
 import {GalleryNavigatorService} from '../navigator/navigator.service';
 import {GridSizes} from '../../../../../common/entities/GridSizes';
-import {NgFor, NgIf, NgSwitch, NgSwitchCase, NgSwitchDefault} from '@angular/common';
+import {AsyncPipe, NgFor, NgIf, NgSwitch, NgSwitchCase, NgSwitchDefault} from '@angular/common';
 import {NgIconComponent} from '@ng-icons/core';
 import {GalleryBlogComponent} from '../blog/blog.gallery.component';
 import {ParseIntPipe} from '../../../pipes/ParseIntPipe';
+import {BlogService} from '../blog/blog.service';
 
 @Component({
   selector: 'app-gallery-grid',
@@ -47,6 +48,7 @@ import {ParseIntPipe} from '../../../pipes/ParseIntPipe';
     GalleryBlogComponent,
     GalleryPhotoComponent,
     ParseIntPipe,
+    AsyncPipe,
   ]
 })
 export class GalleryGridComponent
@@ -87,7 +89,8 @@ export class GalleryGridComponent
     private router: Router,
     public sortingService: GallerySortingService,
     public navigatorService: GalleryNavigatorService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    public blogService: BlogService
   ) {
   }
 
@@ -96,12 +99,14 @@ export class GalleryGridComponent
       return;
     }
 
-    this.containerMinHeight = this.gridContainer.nativeElement.clientHeight; // reduce flickering
-    this.updateContainerDimensions();
-    this.mergeNewPhotos();
-    this.renderMinimalPhotos();
+    this.containerMinHeight = Math.min(PageHelper.ScrollY + window.innerHeight, this.gridContainer.nativeElement.clientHeight); // reduce flickering
     setTimeout(() => {
-      this.containerMinHeight = 0; // remove min height after new photos are rendered
+      this.updateContainerDimensions();
+      this.mergeNewPhotos();
+      this.renderMinimalPhotos();
+      setTimeout(() => {
+        this.containerMinHeight = 0; // remove min height after new photos are rendered
+      }, 0);
     }, 0);
   }
 
@@ -282,7 +287,7 @@ export class GalleryGridComponent
     // if all check passed, nothing to delete from the last group
     if (!diffFound &&
       lastOkIndex.media == this.mediaGroups[lastOkIndex.groups].media.length - 1) {
-      firstDeleteIndex.groups = lastOkIndex.groups;
+      firstDeleteIndex.groups = lastOkIndex.groups; // delete last ok group as we might want to add more photos
       firstDeleteIndex.media = lastOkIndex.media + 1;
     }
 
@@ -298,8 +303,6 @@ export class GalleryGridComponent
     this.mediaToRender.splice(firstDeleteIndex.groups + 1);
     const media = this.mediaToRender[firstDeleteIndex.groups].media;
     media.splice(firstDeleteIndex.media);
-
-
   }
 
   public renderARow(): number {
@@ -390,7 +393,7 @@ export class GalleryGridComponent
   }
 
   /*
-  Renders some photos. If nothing specified, this amount should be enough
+  Renders some photos. If nothing is specified, this amount should be enough
   * */
   private renderMinimalPhotos() {
     this.helperTime = window.setTimeout((): void => {
@@ -414,6 +417,7 @@ export class GalleryGridComponent
     }
     let groupIndex = -1;
     let mediaIndex = -1;
+
     for (let i = 0; i < this.mediaGroups.length; ++i) {
       mediaIndex = this.mediaGroups[i].media.findIndex(
         (p): boolean => this.queryService.getMediaStringId(p) === mediaStringId
@@ -427,12 +431,12 @@ export class GalleryGridComponent
       this.router.navigate([], {queryParams: this.queryService.getParams()});
       return;
     }
-    // Make sure that at leas one more row is rendered
-    // It is possible that only the last few pixels of a photo is visible,
-    // so not required to render more, but the scrollbar does not trigger more photos to render
+    // Make sure that at least one more row is rendered
+    // It is possible that only the last few pixels of a photo are visible,
+    // so not required to render more. However, the scrollbar does not trigger more photos to render
     // (on lightbox navigation)
     while (
-      (this.mediaToRender.length - 1 <= groupIndex ||
+      ((this.mediaToRender.length - 1 <= groupIndex && this.mediaGroups.length > 1) ||
         this.mediaToRender[this.mediaToRender.length - 1]?.media?.length < mediaIndex) &&
       this.renderARow() !== null
       // eslint-disable-next-line no-empty
@@ -454,10 +458,9 @@ export class GalleryGridComponent
   private shouldRenderMore(offset = 0): boolean {
     const bottomOffset = this.getMaxRowHeight() * 2;
     const maxScroll = PageHelper.MaxScrollY + offset;
-
     return (
       Config.Gallery.enableOnScrollRendering === false ||
-      PageHelper.ScrollY >= maxScroll - bottomOffset ||
+      PageHelper.ScrollY >= maxScroll - bottomOffset || // too close to the bottom
       maxScroll * 0.85 < window.innerHeight
     );
   }
@@ -473,7 +476,6 @@ export class GalleryGridComponent
     ) {
       return;
     }
-
     let renderedContentHeight = 0;
 
     while (
@@ -500,7 +502,7 @@ export class GalleryGridComponent
     }
 
     const scrollY = PageHelper.OverflowY;
-    PageHelper.showScrollY();
+    PageHelper.showScrollY('grid');
     // if the width changed a bit or the height changed a lot
     if (
       this.containerWidth !== this.gridContainer.nativeElement.parentElement.clientWidth ||

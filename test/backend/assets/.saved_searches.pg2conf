@@ -3,7 +3,7 @@
   "name": "Alvin",
   "searchQuery": {
     "type": 105,
-    "text": "Alvin",
+    "value": "Alvin",
     "matchType": 2
   }
 }

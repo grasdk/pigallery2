@@ -88,7 +88,7 @@
           placeholder="Search text"
           i18n-placeholder
           class="form-control rounded-2"
-          [(ngModel)]="AsTextQuery.text"
+          [(ngModel)]="AsTextQuery.value"
           (change)="onChange()"
           (ngModelChange)="onChange()"
           type="text"/>
@@ -126,30 +126,29 @@
         </div>
       </div>
       <!-- Range Search Query -->
-      <div *ngSwitchCase="SearchQueryTypes.from_date" class="col-10 col-lg d-flex">
-        <input id="from_date"
-               name="from_date"
-               title="From date"
+      <div *ngSwitchCase="SearchQueryTypes.date" class="col-10 col-lg d-flex">
+        <input id="date_min"
+               name="date_min"
+               title="start date"
                i18n-title
-               [ngModel]="AsRangeQuery.value | date:'yyyy-MM-dd'"
-               (ngModelChange)="AsRangeQuery.value = $event; onChange() "
-               [value]="AsRangeQuery.value | date:'yyyy-MM-dd'"
-               #from_date="ngModel"
+               [ngModel]="AsRangeQuery.min | date:'yyyy-MM-dd'"
+               (ngModelChange)="AsRangeQuery.min = $event; onChange() "
+               [value]="AsRangeQuery.min | date:'yyyy-MM-dd'"
+               #date_min="ngModel"
+               class="form-control input-md rounded-2"
+               type="date">
+        <input id="date_max"
+               name="date_max"
+               title="end date"
+               i18n-title
+               [ngModel]="AsRangeQuery.max | date:'yyyy-MM-dd'"
+               (ngModelChange)="AsRangeQuery.max = $event; onChange() "
+               [value]="AsRangeQuery.max | date:'yyyy-MM-dd'"
+               #date_max="ngModel"
                class="form-control input-md rounded-2"
                type="date">
       </div>
-      <div *ngSwitchCase="SearchQueryTypes.to_date" class="col-10 col-lg d-flex">
-        <input [id]="'to_date'+id"
-               [name]="'to_date'+id"
-               title="To date"
-               i18n-title
-               [ngModel]="AsRangeQuery.value | date:'yyyy-MM-dd'"
-               (ngModelChange)="AsRangeQuery.value = $event; onChange() "
-               [value]="AsRangeQuery.value | date:'yyyy-MM-dd'" #to_date="ngModel"
-               class="form-control input-md rounded-2"
-               type="date">
-      </div>
-      <div *ngSwitchCase="SearchQueryTypes.min_rating" class="col-10 col-lg d-flex">
+      <div *ngSwitchCase="SearchQueryTypes.rating" class="col-10 col-lg d-flex">
         <input [id]="'minRating'+id"
                [name]="'minRating'+id"
                title="Minimum Rating"
@@ -158,11 +157,9 @@
                min="0"
                max="5"
                class="form-control input-md rounded-2"
-               [(ngModel)]="AsRangeQuery.value"
+               [(ngModel)]="AsRangeQuery.min"
                (ngModelChange)="onChange()"
                type="number">
-      </div>
-      <div *ngSwitchCase="SearchQueryTypes.max_rating" class="col-10 col-lg d-flex">
         <input [id]="'maxRating'+id"
                [name]="'maxRating'+id"
                title="Maximum Rating"
@@ -171,11 +168,11 @@
                min="0"
                max="5"
                class="form-control input-md rounded-2"
-               [(ngModel)]="AsRangeQuery.value"
+               [(ngModel)]="AsRangeQuery.max"
                (ngModelChange)="onChange()"
                type="number">
       </div>
-      <div *ngSwitchCase="SearchQueryTypes.min_person_count" class="col-10 col-lg d-flex">
+      <div *ngSwitchCase="SearchQueryTypes.person_count" class="col-10 col-lg d-flex">
         <input [id]="'min_person_count'+id"
                [name]="'min_person_count'+id"
                title="Minimum Person count"
@@ -184,11 +181,9 @@
                min="0"
                max="5"
                class="form-control input-md rounded-2"
-               [(ngModel)]="AsRangeQuery.value"
+               [(ngModel)]="AsRangeQuery.min"
                (ngModelChange)="onChange()"
                type="number">
-      </div>
-      <div *ngSwitchCase="SearchQueryTypes.max_person_count" class="col-10 col-lg d-flex">
         <input [id]="'max_person_count'+id"
                [name]="'max_person_count'+id"
                title="Maximum Person count"
@@ -197,11 +192,11 @@
                min="0"
                max="5"
                class="form-control input-md rounded-2"
-               [(ngModel)]="AsRangeQuery.value"
+               [(ngModel)]="AsRangeQuery.max"
                (ngModelChange)="onChange()"
                type="number">
       </div>
-      <div *ngSwitchCase="SearchQueryTypes.min_resolution" class="col-10 col-lg">
+      <div *ngSwitchCase="SearchQueryTypes.resolution" class="col-10 col-lg">
         <div class="input-group">
           <input [id]="'minResolution'+id"
                  [name]="'minResolution'+id"
@@ -210,14 +205,11 @@
                  i18n-title
                  min="0"
                  class="form-control input-md"
-                 [(ngModel)]="AsRangeQuery.value"
+                 [(ngModel)]="AsRangeQuery.min"
                  (ngModelChange)="onChange()"
                  type="number">
           <span class="input-group-text">Mpx</span>
         </div>
-      </div>
-
-      <div *ngSwitchCase="SearchQueryTypes.max_resolution" class="col-10 col-lg">
         <div class="input-group">
           <input [id]="'maxResolution'+id"
                  [name]="'maxResolution'+id"
@@ -226,7 +218,7 @@
                  i18n-title
                  [min]="0"
                  class="form-control input-md"
-                 [(ngModel)]="AsRangeQuery.value"
+                 [(ngModel)]="AsRangeQuery.max"
                  (ngModelChange)="onChange()"
                  type="number">
           <span class="input-group-text">Mpx</span>

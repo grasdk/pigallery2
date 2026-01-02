@@ -299,7 +299,7 @@ export class GallerySearchFieldBaseComponent
     this.emptyAutoComplete();
     suggestions.forEach((item: RenderableAutoCompleteItem): void => {
       const renderItem = new AutoCompleteRenderItem(
-        item.text,
+        item.value,
         this.autoCompleteService.getPrefixLessSearchText(searchText),
         item.type,
         item.queryHint,

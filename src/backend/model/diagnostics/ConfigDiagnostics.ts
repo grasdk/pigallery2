@@ -368,6 +368,9 @@ export class ConfigDiagnostics {
       NotificationManager.warning('You are running the application with NODE_ENV=debug. This exposes a lot of debug information that can be a security vulnerability. Set NODE_ENV=production, when you finished debugging.');
     }
 
+    if(!global.gc){
+      Logger.debug(LOG_TAG, 'Garbage collector is not available, the app won\'t be able to manually trigger it to save RAM.');
+    }
 
     try {
       await ConfigDiagnostics.testDatabase(Config.Database);
@@ -502,7 +505,7 @@ export class ConfigDiagnostics {
       );
       Config.AlbumCover.SearchQuery = {
         type: SearchQueryTypes.any_text,
-        text: '',
+        value: '',
       } as TextSearch;
     }
 

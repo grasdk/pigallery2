@@ -54,6 +54,8 @@ import {
   ionBrushOutline,
   ionCalendarOutline,
   ionCameraOutline,
+  ionCaretDown,
+  ionCaretForward,
   ionChatboxOutline,
   ionCheckmarkOutline,
   ionChevronBackOutline,
@@ -98,6 +100,7 @@ import {
   ionPricetagOutline,
   ionPulseOutline,
   ionRefresh,
+  ionReload,
   ionRemoveOutline,
   ionResizeOutline,
   ionSaveOutline,
@@ -120,7 +123,7 @@ import {
   ionVolumeMediumOutline,
   ionVolumeMuteOutline,
   ionWarningOutline,
-  ionReload
+  ionFingerPrint
 } from '@ng-icons/ionicons';
 import {ClipboardModule} from 'ngx-clipboard';
 import {TooltipModule} from 'ngx-bootstrap/tooltip';
@@ -139,6 +142,7 @@ import {AppComponent} from './app/app.component';
 import {Marker} from 'leaflet';
 import {MarkerFactory} from './app/ui/gallery/map/MarkerFactory';
 import {DurationPipe} from './app/pipes/DurationPipe';
+import {GalleryService} from './app/ui/gallery/gallery.service';
 
 if (environment.production) {
   enableProdMode();
@@ -200,7 +204,9 @@ bootstrapApplication(AppComponent, {
         ionTimeOutline, ionCheckmarkOutline, ionPulseOutline, ionResizeOutline,
         ionCloudOutline, ionChatboxOutline, ionServerOutline, ionFileTrayFullOutline, ionBrushOutline,
         ionBrowsersOutline, ionUnlinkOutline, ionSquareOutline, ionGridOutline,
-        ionAppsOutline, ionOpenOutline, ionRefresh, ionExtensionPuzzleOutline, ionList, ionPencil, ionReload
+        ionAppsOutline, ionOpenOutline, ionRefresh, ionExtensionPuzzleOutline, ionList, ionPencil, ionReload,
+        ionCaretForward, ionCaretDown,
+        ionFingerPrint
       }), ClipboardModule, TooltipModule.forRoot(), ToastrModule.forRoot(),
       ModalModule.forRoot(), CollapseModule.forRoot(), PopoverModule.forRoot(),
       BsDropdownModule.forRoot(), BsDatepickerModule.forRoot(), TimepickerModule.forRoot(),
@@ -217,6 +223,7 @@ bootstrapApplication(AppComponent, {
     GalleryCacheService,
     ContentService,
     ContentLoaderService,
+    GalleryService,
     FilterService,
     GallerySortingService,
     GalleryNavigatorService,
