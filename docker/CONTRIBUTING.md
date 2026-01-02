@@ -33,20 +33,29 @@ $ docker buildx build \
   --output=type=docker,dest=pigallery2-test
 ```
 
-### Building a docker image from a specific commit ID between version 2.0.0 and 3.0.0
+### Building a docker image using github actions
 
-When you fork this repo, you can build and publish an image using the `build-from-commit_id-between-v2-and-v3` github actions workflow.
+Need to build for another architecture than what you're working on? E.g. you want to install on an older RPi (arm/v7), but don't want to use it for building.
 
-> This github actions workflow was created in order to retrospectively create builds and releases of commits between versions 2.0.0 and 3.0.0, which was the period between October 2023 and late June 2025. The workflow will not work on commits in July 2025 and onwards, which was where `arm/v7` support was dropped. Any release made with the workflow, should still support `arm/v7`, e.g. Raspberry Pi 2 and 3, which was the primary reason to create the workflow.
+No problem: With a github actions workflow, you can both build it and make the ready image available on your private docker hub account. After you're done, you can delete the images again.
 
 #### Preconditions
 
-It requires that you set these github secrets for your fork (info from your docker-hub account):
-- `REGISTRY_NAMESPACE`
-- `REGISTRY_USERNAME`
-- `REGISTRY_PASSWORD`
+1. You need a docker-hub account!
+   - https://app.docker.com/signup
+2. You need a github account!
+   - https://github.com/signup
+3. You need to fork pigallery2
+   - https://github.com/bpatrik/pigallery2/fork
+4. You need to go to Settings -> Secrets and variables -> Actions for your fork and set these three values (with info from your docker-hub account)
+   - `REGISTRY_NAMESPACE` (your docker-hub namespace - typically your username)
+   - `REGISTRY_USERNAME` (your docker-hub username)
+   - `REGISTRY_PASSWORD` (your generated Personal Access Token from docker-hub - needs to have read and write privileges)
 
 #### Usage
+
+
+Build and publish an image using the `build-from-commit_id-between-v2-and-v3` github actions workflow.
 
 When you run the workflow / github action, it will ask you for a commit ID which will then be built and published to docker hub, given the 3 values above.
 
