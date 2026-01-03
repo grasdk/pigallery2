@@ -148,16 +148,15 @@ jobs:
             fi
 
             # ----------------------------------------------------
-            # STEP 3: Ensure apt-get update works (Debian/Ubuntu)
+            # STEP 3: Detect Debian/Ubuntu inside the container
             # ----------------------------------------------------
-            if [[ "$base_image" == *"debian"* || "$base_image" == *"ubuntu"* ]]; then
+            if docker run --rm "$base_image" sh -c 'grep -qiE "debian|ubuntu" /etc/os-release' >/dev/null 2>&1; then
               echo "Testing apt-get update for $base_image..."
               if ! docker run --rm "$base_image" sh -c "apt-get update" >/dev/null 2>&1; then
                 echo "Skipping $container — apt-get update fails (likely EOL distro)"
                 continue
               fi
             fi
-
             # ----------------------------------------------------
             # STEP 4: Extract and filter supported platforms
             # ----------------------------------------------------
