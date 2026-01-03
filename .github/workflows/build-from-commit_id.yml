@@ -179,9 +179,6 @@ jobs:
             echo "Final docker matrix: $json"
           fi
 
-
-
-
   docker:
     runs-on: ubuntu-latest
     needs: [build-release, detect-docker-targets]
@@ -222,6 +219,29 @@ jobs:
           date=$(date -u -d @$ts +%Y%m%d%H%M%S)
           short_sha=$(echo "$sha" | cut -c1-7)
           echo "version=0.0.0-unstable.${date}.${short_sha}" >> $GITHUB_OUTPUT
+
+      - name: Override release package.json version (append unstable build)
+        run: |
+          # The unstable build version from your version step
+          unstable="${{ steps.version.outputs.version }}"
+
+          # Read the original version from the release artifact
+          original=$(jq -r '.version' pigallery2-release/package.json)
+
+          # Compose the combined version string
+          combined="${original} (${unstable})"
+
+          echo "Setting pigallery2-release/package.json version to: $combined"
+
+          # Write it back
+          jq --arg v "$combined" '.version = $v' \
+            pigallery2-release/package.json \
+            > pigallery2-release/package.json.tmp
+
+          mv pigallery2-release/package.json.tmp pigallery2-release/package.json
+
+          # Show the result
+          grep '"version"' pigallery2-release/package.json
 
       - name: Build and push docker images
         uses: docker/build-push-action@v5
