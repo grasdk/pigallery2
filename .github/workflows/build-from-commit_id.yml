@@ -137,18 +137,30 @@ jobs:
 
             echo "Checking $container (base image: $base_image)"
 
-            # Inspect manifest
             manifest=$(docker manifest inspect "$base_image" 2>/dev/null || true)
             if [ -z "$manifest" ]; then
               echo "Skipping $container — manifest not found"
               continue
             fi
 
-            # Extract supported platforms
-            platforms=$(echo "$manifest" | jq -r '.manifests[].platform | "\(.os)/\(.architecture)\(.variant // "")"' | paste -sd "," -)
+            # Extract and normalize platforms
+            raw_platforms=$(echo "$manifest" | jq -r '.manifests[].platform | "\(.os)/\(.architecture)\(.variant // "")"')
+
+            # Filter to only the platforms we actually support
+            platforms=""
+            for p in $raw_platforms; do
+              case "$p" in
+                linux/amd64) platforms="${platforms},linux/amd64" ;;
+                linux/arm64|linux/arm64v8) platforms="${platforms},linux/arm64" ;;
+                linux/arm/v7|linux/armv7) platforms="${platforms},linux/arm/v7" ;;
+              esac
+            done
+
+            # Remove leading comma
+            platforms="${platforms#,}"
 
             if [ -z "$platforms" ]; then
-              echo "Skipping $container — no platforms detected"
+              echo "Skipping $container — no supported platforms"
               continue
             fi
 
@@ -166,6 +178,7 @@ jobs:
             echo "matrix={\"include\": $json}" >> $GITHUB_OUTPUT
             echo "Final docker matrix: $json"
           fi
+
 
 
   docker:
