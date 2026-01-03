@@ -122,6 +122,9 @@ jobs:
       - name: Detect available docker targets
         id: set-matrix
         run: |
+          # Ensure Docker is ready
+          docker info > /dev/null 2>&1 || true
+
           dirs=()
 
           for d in docker/*; do
@@ -132,29 +135,31 @@ jobs:
 
             container=$(basename "$d")
 
-            # Extract base image from Dockerfile.build
+            # Extract base image
             base_image=$(grep -E '^FROM ' "$d/Dockerfile.build" | awk '{print $2}')
 
-            # Check if the base image exists on Docker Hub
+            echo "Checking $container (base image: $base_image)"
+
+            # Validate base image exists
             if ! docker manifest inspect "$base_image" > /dev/null 2>&1; then
               echo "Skipping $container — base image '$base_image' does not exist"
               continue
             fi
 
-            # Add to list
+            echo "Including $container"
             dirs+=("\"$container\"")
           done
 
           # Build JSON array safely
           if [ ${#dirs[@]} -eq 0 ]; then
             echo "matrix={\"container\":[]}" >> $GITHUB_OUTPUT
+            echo "No valid docker targets found"
           else
             json=$(printf ",%s" "${dirs[@]}")
             json="[${json:1}]"
             echo "matrix={\"container\": $json}" >> $GITHUB_OUTPUT
+            echo "Final docker targets: $json"
           fi
-
-          echo "Detected docker targets: $json"
 
   docker:
     runs-on: ubuntu-latest
