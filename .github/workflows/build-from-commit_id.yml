@@ -164,6 +164,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     needs: [build-release, detect-docker-targets]
+    if: ${{ needs.detect-docker-targets.outputs.matrix != '{"container":[]}' }}
 
     strategy:
       matrix: ${{ fromJson(needs.detect-docker-targets.outputs.matrix) }}
