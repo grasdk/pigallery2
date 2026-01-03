@@ -12,7 +12,7 @@
 # What makes it different from the build workflow?
 # - Runs only manually
 # - Allows you to select any commit, if you want to compare behavior
-# Tags your version : 0.0.0-unstable.YYYYMMDDhhmmss.shortsha
+# Tags your version : 0.0.0-unstable.YYYYMMDD.shortsha
 
 name: docker-buildx-from-commit
 run-name: Build pigallery2 from ${{ github.event.inputs.commit_id || github.ref_name }}
@@ -43,7 +43,7 @@ jobs:
         id: ref
         run: |
           if [ -z "${{ github.event.inputs.commit_id }}" ]; then
-            echo "ref=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+            echo "ref=${GITHUB_REF}" >> $GITHUB_OUTPUT
           else
             echo "ref=${{ github.event.inputs.commit_id }}" >> $GITHUB_OUTPUT
           fi
@@ -112,7 +112,7 @@ jobs:
         id: ref
         run: |
           if [ -z "${{ github.event.inputs.commit_id }}" ]; then
-            echo "ref=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+            echo "ref=${GITHUB_REF}" >> $GITHUB_OUTPUT
           else
             echo "ref=${{ github.event.inputs.commit_id }}" >> $GITHUB_OUTPUT
           fi
@@ -129,7 +129,7 @@ jobs:
           node-version: 18
 
       - name: Install Deps
-        run: npm install --unsafe-perm
+        run: npm ci --unsafe-perm
 
       - name: Create Release
         run: npm run create-release -- --skip-opt-packages=ffmpeg-static,ffprobe-static --force-opt-packages
