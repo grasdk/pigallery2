@@ -123,17 +123,38 @@ jobs:
         id: set-matrix
         run: |
           dirs=()
+
           for d in docker/*; do
-            if [ -d "$d" ] && [ -f "$d/Dockerfile.build" ]; then
-              dirs+=("\"$(basename "$d")\"")
+            # Must be a directory and contain Dockerfile.build
+            if [ ! -d "$d" ] || [ ! -f "$d/Dockerfile.build" ]; then
+              continue
             fi
+
+            container=$(basename "$d")
+
+            # Extract base image from Dockerfile.build
+            base_image=$(grep -E '^FROM ' "$d/Dockerfile.build" | awk '{print $2}')
+
+            # Check if the base image exists on Docker Hub
+            if ! docker manifest inspect "$base_image" > /dev/null 2>&1; then
+              echo "Skipping $container — base image '$base_image' does not exist"
+              continue
+            fi
+
+            # Add to list
+            dirs+=("\"$container\"")
           done
 
-          # Join with commas
-          json=$(printf ",%s" "${dirs[@]}")
-          json="[${json:1}]"
+          # Build JSON array safely
+          if [ ${#dirs[@]} -eq 0 ]; then
+            echo "matrix={\"container\":[]}" >> $GITHUB_OUTPUT
+          else
+            json=$(printf ",%s" "${dirs[@]}")
+            json="[${json:1}]"
+            echo "matrix={\"container\": $json}" >> $GITHUB_OUTPUT
+          fi
 
-          echo "matrix={\"container\": $json}" >> $GITHUB_OUTPUT
+          echo "Detected docker targets: $json"
 
   docker:
     runs-on: ubuntu-latest
