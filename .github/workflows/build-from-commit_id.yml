@@ -1,16 +1,29 @@
-# Workflow for pigallery2 pre_alpha builds
-# Covers versions between 2.0.0 (Oct 2023) and 3.0.0 (Jul 2025).
-# Uses semver-style tags: 3.0.0-pre_alpha.YYYYMMDDhhmmss.shortsha
+# Workflow for manual pigallery2 builds and image creation.
+# Uploads to YOUR docker hub account, given the 3 secrets:
+#   - `REGISTRY_NAMESPACE` (your docker-hub namespace - typically your username)
+#   - `REGISTRY_USERNAME` (your docker-hub username)
+#   - `REGISTRY_PASSWORD` (your generated Personal Access Token from docker-hub - needs to have read and write privileges)
 
-name: docker-buildx-from-commit-between-v2-and-v3
-run-name: Build pre_alpha for commit ${{ github.event.inputs.commit_id }}
+# Why have this?
+# - Easy multi architecture building and image creation.
+# - You don't have to worry about QEMU and other tedious build setups.
+# - You want use and test your fork of pigallery2 on another architecture than the one you are developing on.
+#
+# What makes it different from the build workflow?
+# - Runs only manually
+# - Allows you to select any commit, if you want to compare behavior
+# Tags your version : 0.0.0-unstable.YYYYMMDDhhmmss.shortsha
+
+name: docker-buildx-from-commit
+run-name: Build pigallery2 from ${{ github.event.inputs.commit_id || github.ref_name }}
 
 on:
   workflow_dispatch:
     inputs:
       commit_id:
-        description: 'Commit SHA to build from'
-        required: true
+        description: 'Commit SHA to build from (leave blank for current branch HEAD)'
+        required: false
+        default: ''
 
 jobs:
   test:
@@ -26,10 +39,19 @@ jobs:
           mysql user: 'user'
           mysql password: 'password'
 
+      - name: Determine ref to build
+        id: ref
+        run: |
+          if [ -z "${{ github.event.inputs.commit_id }}" ]; then
+            echo "ref=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          else
+            echo "ref=${{ github.event.inputs.commit_id }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout specific commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.commit_id }}
+          ref: ${{ steps.ref.outputs.ref }}
           fetch-depth: 0   # ensure full history so commit is available
 
       - name: Use Node.js ${{ matrix.node-version }}
@@ -39,7 +61,7 @@ jobs:
 
       - name: Verify MariaDB connection
         env:
-          PORT: ${{ job.services.mariadb.ports[3306] }}
+          PORT: 3306
         run: |
           while ! mysqladmin ping -h"127.0.0.1" -P"$PORT" --silent; do
             sleep 1
@@ -61,7 +83,7 @@ jobs:
           MYSQL_HOST: localhost
           MYSQL_USERNAME: root
           MYSQL_PASSWORD: password
-          MYSQL_PORT: ${{ job.services.mariadb.ports[3306] }}
+          MYSQL_PORT: 3306
           PORT: 35000
           CI: true
 
@@ -86,10 +108,19 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test]
     steps:
+      - name: Determine ref to build
+        id: ref
+        run: |
+          if [ -z "${{ github.event.inputs.commit_id }}" ]; then
+            echo "ref=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          else
+            echo "ref=${{ github.event.inputs.commit_id }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout specific commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.commit_id }}
+          ref: ${{ steps.ref.outputs.ref }}
           fetch-depth: 0   # ensure full history
 
       - name: Setup Node.js
@@ -123,10 +154,19 @@ jobs:
             platforms: linux/amd64,linux/arm64,linux/arm/v7
 
     steps:
+      - name: Determine ref to build
+        id: ref
+        run: |
+          if [ -z "${{ github.event.inputs.commit_id }}" ]; then
+            echo "ref=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          else
+            echo "ref=${{ github.event.inputs.commit_id }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout specific commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.commit_id }}
+          ref: ${{ steps.ref.outputs.ref }}
           fetch-depth: 0
 
       - uses: actions/download-artifact@v4
@@ -143,10 +183,18 @@ jobs:
       - name: Derive version string
         id: version
         run: |
-          ts=$(git show -s --format=%ct ${{ github.event.inputs.commit_id }})
+          # Determine commit SHA (input or HEAD)
+          if [ -z "${{ github.event.inputs.commit_id }}" ]; then
+            sha=$(git rev-parse HEAD)
+          else
+            sha="${{ github.event.inputs.commit_id }}"
+          fi
+
+          ts=$(git show -s --format=%ct "$sha")
           date=$(date -u -d @$ts +%Y%m%d%H%M%S)
-          short_sha=$(echo "${{ github.event.inputs.commit_id }}" | cut -c1-7)
-          echo "version=3.0.0-pre_alpha.${date}.${short_sha}" >> $GITHUB_OUTPUT
+          short_sha=$(echo "$sha" | cut -c1-7)
+
+          echo "version=0.0.0-unstable.${date}.${short_sha}" >> $GITHUB_OUTPUT
 
       - name: Override release package.json version
         run: |
