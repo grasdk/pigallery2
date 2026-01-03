@@ -66,6 +66,8 @@ jobs:
   build-release:
     runs-on: ubuntu-latest
     needs: prepare
+    outputs:
+      ref: ${{ needs.prepare.outputs.ref }}
 
     steps:
       - name: Checkout commit
@@ -104,26 +106,42 @@ jobs:
           name: pigallery2-release
           path: release
 
-  docker:
+  detect-docker-targets:
     runs-on: ubuntu-latest
     needs: build-release
-
-    strategy:
-      matrix:
-        container: [alpine, debian-bullseye, debian-bookworm]
-        include:
-          - container: alpine
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
-          - container: debian-bullseye
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
-          - container: debian-bookworm
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
 
     steps:
       - name: Checkout commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.prepare.outputs.ref }}
+          ref: ${{ needs.build-release.outputs.ref }}
+          fetch-depth: 0
+
+      - name: Detect available docker targets
+        id: set-matrix
+        run: |
+          dirs=()
+          for d in docker/*; do
+            if [ -d "$d" ] && [ -f "$d/Dockerfile.build" ]; then
+              dirs+=("\"$(basename "$d")\"")
+            fi
+          done
+          echo "matrix={\"container\":[${dirs[*]}]}" >> $GITHUB_OUTPUT
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: [build-release, detect-docker-targets]
+
+    strategy:
+      matrix: ${{ fromJson(needs.detect-docker-targets.outputs.matrix) }}
+
+    steps:
+      - name: Checkout commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.build-release.outputs.ref }}
           fetch-depth: 0
 
       - uses: actions/download-artifact@v4
@@ -157,7 +175,8 @@ jobs:
         with:
           context: .
           file: docker/${{ matrix.container }}/Dockerfile.build
-          platforms: ${{ matrix.platforms }}
+          platforms: |
+            linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: |
             ${{ secrets.REGISTRY_NAMESPACE }}/pigallery2:${{ steps.version.outputs.version }}-${{ matrix.container }}
