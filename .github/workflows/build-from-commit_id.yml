@@ -131,22 +131,39 @@ jobs:
             [ -f "$d/Dockerfile.build" ] || continue
 
             container=$(basename "$d")
+            echo "=== Checking container: $container ==="
 
-            # Extract first FROM line
+            # ----------------------------------------------------
+            # STEP 1: Extract base image from Dockerfile
+            # ----------------------------------------------------
             base_image=$(grep -E '^FROM ' "$d/Dockerfile.build" | head -n 1 | awk '{print $2}')
+            echo "Base image: $base_image"
 
-            echo "Checking $container (base image: $base_image)"
-
-            manifest=$(docker manifest inspect "$base_image" 2>/dev/null || true)
-            if [ -z "$manifest" ]; then
-              echo "Skipping $container — manifest not found"
+            # ----------------------------------------------------
+            # STEP 2: Ensure base image exists on Docker Hub
+            # ----------------------------------------------------
+            if ! docker manifest inspect "$base_image" >/dev/null 2>&1; then
+              echo "Skipping $container — base image does not exist"
               continue
             fi
 
-            # Extract and normalize platforms
+            # ----------------------------------------------------
+            # STEP 3: Ensure apt-get update works (Debian/Ubuntu)
+            # ----------------------------------------------------
+            if [[ "$base_image" == *"debian"* || "$base_image" == *"ubuntu"* ]]; then
+              echo "Testing apt-get update for $base_image..."
+              if ! docker run --rm "$base_image" sh -c "apt-get update" >/dev/null 2>&1; then
+                echo "Skipping $container — apt-get update fails (likely EOL distro)"
+                continue
+              fi
+            fi
+
+            # ----------------------------------------------------
+            # STEP 4: Extract and filter supported platforms
+            # ----------------------------------------------------
+            manifest=$(docker manifest inspect "$base_image" 2>/dev/null || true)
             raw_platforms=$(echo "$manifest" | jq -r '.manifests[].platform | "\(.os)/\(.architecture)\(.variant // "")"')
 
-            # Filter to only the platforms we actually support
             platforms=""
             for p in $raw_platforms; do
               case "$p" in
@@ -156,7 +173,6 @@ jobs:
               esac
             done
 
-            # Remove leading comma
             platforms="${platforms#,}"
 
             if [ -z "$platforms" ]; then
@@ -164,11 +180,19 @@ jobs:
               continue
             fi
 
-            echo "Including $container with platforms: $platforms"
+            echo "Platforms: $platforms"
 
+            # ----------------------------------------------------
+            # STEP 5: Add to matrix
+            # ----------------------------------------------------
             entries+=("{\"container\":\"$container\",\"platforms\":\"$platforms\"}")
+            echo "Included."
+            echo
           done
 
+          # ----------------------------------------------------
+          # STEP 6: Output final matrix
+          # ----------------------------------------------------
           if [ ${#entries[@]} -eq 0 ]; then
             echo "matrix={\"include\":[]}" >> $GITHUB_OUTPUT
             echo "No valid docker targets found"
