@@ -119,43 +119,54 @@ jobs:
           ref: ${{ needs.build-release.outputs.ref }}
           fetch-depth: 0
 
-      - name: Detect available docker targets
+      - name: Detect docker targets + platforms
         id: set-matrix
         run: |
           docker info > /dev/null 2>&1 || true
 
-          dirs=()
+          entries=()
 
           for d in docker/*; do
-            if [ ! -d "$d" ] || [ ! -f "$d/Dockerfile.build" ]; then
-              continue
-            fi
+            [ -d "$d" ] || continue
+            [ -f "$d/Dockerfile.build" ] || continue
 
             container=$(basename "$d")
 
-            # Extract ONLY the first FROM line
+            # Extract first FROM line
             base_image=$(grep -E '^FROM ' "$d/Dockerfile.build" | head -n 1 | awk '{print $2}')
 
             echo "Checking $container (base image: $base_image)"
 
-            if ! docker manifest inspect "$base_image" > /dev/null 2>&1; then
-              echo "Skipping $container — base image '$base_image' does not exist"
+            # Inspect manifest
+            manifest=$(docker manifest inspect "$base_image" 2>/dev/null || true)
+            if [ -z "$manifest" ]; then
+              echo "Skipping $container — manifest not found"
               continue
             fi
 
-            echo "Including $container"
-            dirs+=("\"$container\"")
+            # Extract supported platforms
+            platforms=$(echo "$manifest" | jq -r '.manifests[].platform | "\(.os)/\(.architecture)\(.variant // "")"' | paste -sd "," -)
+
+            if [ -z "$platforms" ]; then
+              echo "Skipping $container — no platforms detected"
+              continue
+            fi
+
+            echo "Including $container with platforms: $platforms"
+
+            entries+=("{\"container\":\"$container\",\"platforms\":\"$platforms\"}")
           done
 
-          if [ ${#dirs[@]} -eq 0 ]; then
-            echo "matrix={\"container\":[]}" >> $GITHUB_OUTPUT
+          if [ ${#entries[@]} -eq 0 ]; then
+            echo "matrix={\"include\":[]}" >> $GITHUB_OUTPUT
             echo "No valid docker targets found"
           else
-            json=$(printf ",%s" "${dirs[@]}")
+            json=$(printf ",%s" "${entries[@]}")
             json="[${json:1}]"
-            echo "matrix={\"container\": $json}" >> $GITHUB_OUTPUT
-            echo "Final docker targets: $json"
+            echo "matrix={\"include\": $json}" >> $GITHUB_OUTPUT
+            echo "Final docker matrix: $json"
           fi
+
 
   docker:
     runs-on: ubuntu-latest
