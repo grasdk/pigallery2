@@ -128,7 +128,12 @@ jobs:
               dirs+=("\"$(basename "$d")\"")
             fi
           done
-          echo "matrix={\"container\":[${dirs[*]}]}" >> $GITHUB_OUTPUT
+
+          # Join with commas
+          json=$(printf ",%s" "${dirs[@]}")
+          json="[${json:1}]"
+
+          echo "matrix={\"container\": $json}" >> $GITHUB_OUTPUT
 
   docker:
     runs-on: ubuntu-latest
