@@ -135,6 +135,12 @@ jobs:
 
           entries=()
 
+          # Architecture filter from workflow_dispatch input
+          arch="${{ github.event.inputs.arch }}"
+          [ -z "$arch" ] && arch="all"
+
+          echo "Architecture filter: $arch"
+
           for d in docker/*; do
             [ -d "$d" ] || continue
             [ -f "$d/Dockerfile.build" ] || continue
@@ -157,17 +163,7 @@ jobs:
             fi
 
             # ----------------------------------------------------
-            # STEP 3: Detect Debian/Ubuntu inside the container
-            # ----------------------------------------------------
-            if docker run --rm "$base_image" sh -c 'grep -qiE "debian|ubuntu" /etc/os-release' >/dev/null 2>&1; then
-              echo "Testing apt-get update for $base_image..."
-              if ! docker run --rm "$base_image" sh -c "apt-get update" >/dev/null 2>&1; then
-                echo "Skipping $container — apt-get update fails (likely EOL distro)"
-                continue
-              fi
-            fi
-            # ----------------------------------------------------
-            # STEP 4: Extract supported platforms
+            # STEP 3: Extract supported platforms
             # ----------------------------------------------------
             manifest=$(docker manifest inspect "$base_image" 2>/dev/null || true)
             raw_platforms=$(echo "$manifest" | jq -r '.manifests[].platform | "\(.os)/\(.architecture)\(.variant // "")"')
@@ -191,7 +187,7 @@ jobs:
             echo "Detected platforms: $platforms"
 
             # ----------------------------------------------------
-            # STEP 5: Apply architecture filter
+            # STEP 4: Apply architecture filter
             # ----------------------------------------------------
             if [ "$arch" != "all" ]; then
               case "$arch" in
@@ -214,7 +210,8 @@ jobs:
             fi
 
             # ----------------------------------------------------
-            # STEP 6: Debian/Ubuntu detection + apt-get guard
+            # STEP 5: Detect Debian/Ubuntu inside the container
+            #         and ensure apt-get update works
             # ----------------------------------------------------
             if docker run --rm "$base_image" sh -c 'grep -qiE "debian|ubuntu" /etc/os-release' >/dev/null 2>&1; then
               echo "Testing apt-get update for $base_image..."
@@ -223,6 +220,15 @@ jobs:
                 continue
               fi
             fi
+
+            # ----------------------------------------------------
+            # STEP 6: Add to matrix
+            # ----------------------------------------------------
+            entries+=("{\"container\":\"$container\",\"platforms\":\"$platforms\"}")
+            echo "Included."
+            echo
+
+          done  # ← REQUIRED LOOP CLOSURE
 
           # ----------------------------------------------------
           # STEP 7: Output final matrix
@@ -236,6 +242,7 @@ jobs:
             echo "matrix={\"include\": $json}" >> $GITHUB_OUTPUT
             echo "Final docker matrix: $json"
           fi
+
 
   docker:
     runs-on: ubuntu-latest
