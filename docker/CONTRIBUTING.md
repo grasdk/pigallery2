@@ -57,7 +57,7 @@ No problem: With a github actions workflow, you can both build it and make the r
 #### Usage
 
 
-Build and publish an image using the `build-custom` github actions workflow.
+Build and publish an image using the `docker-buildx-custom` github actions workflow.
 
 When you run the workflow / github action, it will ask you for a commit ID, an architecture, an overriding version number and whether to run tests. Each has a default, so you don't need to do anything:
 - `Commit ID`: Default is blank. If blank a build will be made from the head of selected branch. Enter a commit-id if you need to build an image from a particular time / commit. Useful for comparison or recreation of older edge versions.

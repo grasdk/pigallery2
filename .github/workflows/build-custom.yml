@@ -15,7 +15,7 @@
 # - Allows you to select any commit, if you want to compare behavior
 # - DOES NOT run all the important steps of the real build flow. It is only a development tool.
 
-name: docker-buildx-from-commit-id
+name: docker-buildx-custom
 run-name: Build pigallery2 from ${{ github.event.inputs.commit_id || github.ref_name }}
 
 on:
