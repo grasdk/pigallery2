@@ -5,14 +5,15 @@
 #   - `REGISTRY_PASSWORD` (your generated Personal Access Token from docker-hub - needs to have read and write privileges)
 
 # Why have this?
-# - Easy multi architecture building and image creation.
+# - Easy and fast multi architecture building and image creation.
 # - You don't have to worry about QEMU and other tedious build setups.
 # - You want use and test your fork of pigallery2 on another architecture than the one you are developing on.
 #
 # What makes it different from the build workflow?
-# - Runs only manually
+# - Runs only manually.
+# - Runs faster, since you can skip tests and architectures
 # - Allows you to select any commit, if you want to compare behavior
-# Tags your version : 0.0.0-unstable.YYYYMMDD.shortsha
+# - DOES NOT run all the important steps of the real build flow. It is only a development tool.
 
 name: docker-buildx-from-commit-id
 run-name: Build pigallery2 from ${{ github.event.inputs.commit_id || github.ref_name }}
@@ -29,7 +30,7 @@ on:
         required: false
         default: "all"
       version_name:
-        description: "Override version (leave blank for default: 0.0.0-unstable-YYMMDD-HHMMSS-SHORTSHA)"
+        description: "Override version (leave blank for default: 0.0.0-unstable-YYMMDD-SHORT_SHA)"
         required: false
         default: ""
       run_tests:

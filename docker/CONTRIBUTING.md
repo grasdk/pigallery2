@@ -33,9 +33,11 @@ $ docker buildx build \
   --output=type=docker,dest=pigallery2-test
 ```
 
+Note, when builing locally, you may build for different architecture, but you cannot create a docker image without QEMU. If you need to build an image you can use the manual custom build action in github under Actions...
+
 ### Building a docker image using github actions
 
-Need to build for another architecture than what you're working on? E.g. you want to install on an older RPi (arm/v7), but don't want to use it for building.
+Need to build for another architecture than what you're working on?
 
 No problem: With a github actions workflow, you can both build it and make the ready image available on your private docker hub account. After you're done, you can delete the images again.
 
@@ -55,8 +57,14 @@ No problem: With a github actions workflow, you can both build it and make the r
 #### Usage
 
 
-Build and publish an image using the `build-from-commit_id-between-v2-and-v3` github actions workflow.
+Build and publish an image using the `build-custom` github actions workflow.
 
-When you run the workflow / github action, it will ask you for a commit ID which will then be built and published to docker hub, given the 3 values above.
+When you run the workflow / github action, it will ask you for a commit ID, an architecture, an overriding version number and whether to run tests. Each has a default, so you don't need to do anything:
+- `Commit ID`: Default is blank. If blank a build will be made from the head of selected branch. Enter a commit-id if you need to build an image from a particular time / commit. Useful for comparison or recreation of older edge versions.
+- `Architecture`: Default is 'all'. In which case images will be made for all architectures supported. To save time, you can limit the architecture to the one of your choice.
+- `Override version`: Default is blank. If blank the version will be 0.0.0-unstable-YYMMDD-SHORT_SHA, e.g. `0.0.0-unstable.20260103220501.cf6386e`. You may use the field to name your version anything... e.g. `mytestversion`.
+- `Run tests`: Default is false. If false no tests will be run. If true tests will run.
 
 ![image showing github actions workflow](image.png)
+
+After the job is done, you will have your images uploaded to docker hub, from where you can pull and run them.
